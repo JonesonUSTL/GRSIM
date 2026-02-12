@@ -1,42 +1,54 @@
-# GPTsolver（Abaqus 对标路线的结构-热非线性 FEM 平台）
+# GPTsolver（Abaqus 对标路线：非线性结构静力 + 热学 + 耦合）
 
-> 当前版本：v0.2（可运行核心 + 可扩展骨架）
->
-> 说明：本项目已实现结构静力、稳态热、结构-热耦合、接触残量/切线刚度（法向+摩擦最小实现）、MPC/Lagrange 显式约束装配、弧长法（cutback + RIKS 风格半径调节）演示链路。完整工业级求解能力仍在迭代中。
+> 这是一个“可运行 + 可扩展”的 C++20 FEM 平台。当前版本强调**工程骨架完整性**与**可持续扩展**，并已具备接触/MPC/弧长法/结构-热耦合的可执行演示链路。
 
 ---
 
-## 1. 功能总览
+## 1. 你现在可以直接做什么
 
-- **结构静力**：稀疏装配 + 非线性弧长法求解。
-- **稳态传热**：稀疏导热矩阵求解。
-- **结构-热耦合**：显式分块矩阵组装 `[[Kuu,Kut],[Ktu,Ktt]]`。
-- **接触**：法向 penalty + 切向库仑摩擦（stick/slip 骨架）。
-- **约束**：MPC/Lagrange 方程显式装配（penalty 近似）。
-- **并行**：OpenMP 装配并行。
-- **I/O**：Abaqus 风格 inp 解析、兼容报告、VTU/PVD、checkpoint、run_manifest。
-- **CLI**：`run / check / info / examples`。
-- **跨平台**：Windows / macOS（Apple Silicon ARM64）脚本。
+- 读取 Abaqus 风格 `.inp` 并执行 `check`/`run`。
+- 跑结构静力、稳态热、结构-热耦合演示算例。
+- 使用接触（法向 penalty + 摩擦限幅）与 MPC 约束演示。
+- 使用非线性弧长法（cutback + 半径自适应）演示。
+- 输出 VTU/PVD、run 日志、兼容报告、checkpoint、summary。
+- 在 macOS（Apple Silicon/M4）与 Windows 使用一键部署脚本。
 
 ---
 
-## 2. 一键构建与运行
+## 2. 一键部署（含环境配置）
 
-### Linux/macOS（含 M4 ARM）
+### 2.1 macOS（Apple Silicon/M4）
 ```bash
-./scripts/build_mac.sh
-./scripts/run_demo_mac.sh
+./scripts/deploy_macos_m4.sh
 ```
+脚本会自动执行：平台检查、Homebrew 检查与安装、依赖安装（cmake/ninja/llvm）、构建、测试、冒烟运行。
 
-### Windows
+### 2.2 Windows（PowerShell）
+```powershell
+.\scripts\deploy_windows.ps1
+```
+脚本会自动执行：winget 安装 CMake/Ninja/Git、构建、测试、冒烟运行。
+
+### 2.3 Windows（CMD）
 ```bat
-scripts\build_windows.bat
-scripts\run_demo_windows.bat
+scripts\deploy_windows.bat
 ```
 
 ---
 
-## 3. 命令行使用
+## 3. 快速开始
+
+```bash
+cmake --preset default
+cmake --build --preset default -j 8
+ctest --test-dir build/default --output-on-failure
+./build/default/gptsolver examples --list
+./build/default/gptsolver run examples/inp/static/coupled_plate.inp --out output/demo --threads 8
+```
+
+---
+
+## 4. 命令行
 
 ```bash
 gptsolver run <model.inp> --out <dir> [--threads N] [--solver-backend eigen|petsc] [--resume checkpoint.bin]
@@ -48,85 +60,87 @@ gptsolver examples --run <name>
 
 ---
 
-## 4. 经典案例（包含百单元级）
+## 5. 支持清单（重点）
 
-- `examples/inp/static/static_bar.inp`
-- `examples/inp/static/large_mesh_120el.inp`（120 单元）
-- `examples/inp/static/coupled_plate.inp`（结构+热同一步）
-- `examples/inp/contact/contact_demo_120el.inp`（接触+摩擦+百单元级）
-- `examples/inp/heat/heat_rod.inp`
+### 5.1 单元支持现状
 
----
+| 类别 | 单元 | 状态 |
+|---|---|---|
+| 实体 | C3D8 / C3D8R | 接口/占位 + 求解演示链路 |
+| 平面 | CPS4 / CPE4 | 接口/占位 + 求解演示链路 |
+| 杆 | T3D2 | 可用于示例模型 |
+| 梁 | beam_placeholder | 占位 |
+| 壳 | shell_placeholder | 占位（后续补多积分点/hourglass） |
 
-## 5. 理论与算法手册（简版）
+### 5.2 算法支持现状
 
-### 5.1 接触残量与切线刚度
-- 法向：`pn = -kn * gap (gap<0)`。
-- 切向：`ft = -kt * slip`，并施加 `|ft| <= mu*pn`。
-- 切线：法向 `kn`，切向 `kt(粘着)/~0(滑移)`。
+| 模块 | 能力 | 状态 |
+|---|---|---|
+| 线性求解 | Sparse LDLT | 已实现 |
+| 迭代求解 | CG | 已实现 |
+| 非线性 | Newton + 弧长法 | 已实现（演示级） |
+| 线搜索 | Backtracking | 已实现 |
+| 增量控制 | cutback + radius 自适应 | 已实现 |
+| 接触 | 法向 penalty + 切向摩擦限幅 | 已实现（演示级） |
+| 约束 | MPC/Lagrange（penalty 近似） | 已实现 |
+| 耦合 | 结构-热分块组装与联立求解 | 已实现 |
+| 并行 | OpenMP 装配并行 | 已实现 |
+| PETSc | 后端接口 | 占位 |
 
-### 5.2 MPC/Lagrange 显式装配
-- 约束 `u_m - r*u_s = 0`。
-- 通过 penalty 近似加入刚度：
-  - `K_mm += p`
-  - `K_ss += p*r^2`
-  - `K_ms += -p*r`
-  - `K_sm += -p*r`
+### 5.3 功能支持现状
 
-### 5.3 弧长法（RIKS 风格最小实现）
-- 迭代中控制增量长度 `||Δu|| <= radius`。
-- 试探步收敛改善时放大半径；否则 cutback 降半径。
-- 支持最大 cutback 次数限制。
+- [x] inp 解析 + AST + 兼容检查
+- [x] INCLUDE 递归 + 循环保护
+- [x] 日志 + 清单 + 兼容报告 + 检查点
+- [x] VTU/PVD 多文件输出
+- [x] 运行状态面板（TUI）
+- [ ] 壳单元多积分点 + hourglass 控制（下一阶段）
+- [ ] 完整 J2 返回映射与多材料库耦合（下一阶段）
 
----
+### 5.4 inp 关键字（当前）
 
-## 6. 运行输出目录
-
-每次运行创建：`output/run_YYYYMMDD_HHMMSS/`
-
-包含：
-- `run.log`
-- `run_manifest.json`
-- `compatibility_report.md`
-- `summary.md`
-- `results/step_x/frame_yyyy.vtu`
-- `results/results.pvd`
-- `checkpoint_*.bin`（结构链路）
-
----
-
-## 7. 输入关键字支持（本版）
-
-已解析并进入可执行或半执行链路：
-- `*STEP, *STATIC, *HEAT TRANSFER, *BOUNDARY, *CLOAD, *TEMPERATURE`
+**Supported-Executable / 部分可执行**
+- `*HEADING, *NODE, *ELEMENT, *NSET, *ELSET`
+- `*STEP, *STATIC, *HEAT TRANSFER, *END STEP`
+- `*BOUNDARY, *CLOAD, *TEMPERATURE`
 - `*SURFACE, *CONTACT PAIR, *SURFACE INTERACTION, *FRICTION`
 - `*MPC, *INCLUDE, *OUTPUT, *NODE OUTPUT, *ELEMENT OUTPUT`
 
-其余关键字：
-- 不崩溃；记录在兼容报告中并给出告警。
+**Parsed-Not-Solved**
+- `*PLASTIC, *USER MATERIAL, *DEPVAR, *DLOAD, *DSLOAD`（解析有，主链路仍在完善）
 
 ---
 
-## 8. 开发文档（快速）
+## 6. 案例与回归
 
-- 核心代码入口：`apps/gptsolver_cli/main.cpp`
-- 解析链路：`src/io/inp/*`
-- 装配链路：`src/assembly/*`
-- 非线性与弧长：`src/solver/nonlinear/newton_solver.cpp`
-- 耦合/接触/MPC 示例：`src/physics/structural/structural_problem.cpp`
+```bash
+./build/default/gptsolver run examples/inp/static/static_bar.inp --out output/reg
+./build/default/gptsolver run examples/inp/heat/heat_rod.inp --out output/reg
+./build/default/gptsolver run examples/inp/static/coupled_plate.inp --out output/reg
+./build/default/gptsolver run examples/inp/contact/contact_demo_120el.inp --out output/reg
+./build/default/gptsolver run examples/inp/static/large_mesh_120el.inp --out output/reg
+```
 
-扩展建议：
-1. 将接触点状态迁移到元素/面高斯点级别并加入邻域搜索。
-2. 引入真实壳/实体积分点与 hourglass 控制（B-bar / assumed strain）。
-3. 引入分块预条件（Schur complement）提升耦合求解规模。
-4. 完善 PETSc 后端与 MPI 并行。
+新增中等规模案例：
+- `examples/inp/static/large_mesh_120el.inp`
+- `examples/inp/contact/contact_demo_120el.inp`
+- `examples/inp/static/coupled_plate.inp`
 
 ---
 
-## 9. 下一步升级建议（每次运行建议）
+## 7. 文档导航
 
-当前程序在 `summary.md` 中自动写出下一步升级建议。建议优先级：
-1. 接触搜索与一致切线（提高收敛稳健性）
-2. 壳单元与 hourglass 控制
-3. 塑性积分与材料库扩展
-4. 动力学与多物理场耦合
+- `docs/03_用户手册_从零开始.md`
+- `docs/06_求解器算法说明.md`
+- `docs/07_接触与弹塑性设计说明.md`
+- `docs/05_ABAQUS_inp兼容矩阵.md`
+- `docs/12_已知限制与路线图.md`
+
+---
+
+## 8. 下一步升级建议（本版后）
+
+1. 壳/实体真实积分点与 hourglass 控制（优先）。
+2. 接触搜索（bbox + 网格桶 + 面-面投影）与一致切线。
+3. 稀疏分块预条件器（Schur）+ PETSc/MPI 后端打通。
+4. 更完整的 Abaqus keyword 行为对齐与回归基线。

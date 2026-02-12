@@ -1,6 +1,8 @@
 #include "gptsolver/solver/nonlinear/newton_solver.hpp"
 
 #include "gptsolver/solver/linear/eigen_direct.hpp"
+#include "gptsolver/solver/nonlinear/increment_controller.hpp"
+#include "gptsolver/solver/nonlinear/line_search.hpp"
 
 namespace gptsolver {
 
@@ -32,12 +34,13 @@ NewtonResult solve_newton_with_arclength(const SparseMatrix& k, const DenseVecto
     DenseVector trial_res = k * trial_u - trial_l * fext;
 
     if (trial_res.norm() < nrm) {
-      r.x = trial_u;
+      const double alpha = backtracking_line_search(k, fext, r.x, du, trial_l);
+      r.x = r.x + alpha * du;
       lambda = trial_l;
-      radius = std::min(opt.radius_max, radius * 1.15);  // RIKS 风格半径放大
+      radius = update_arc_radius(radius, true, opt.radius_min, opt.radius_max);
       cutback = 0;
     } else {
-      radius = std::max(opt.radius_min, radius * 0.5);  // cutback
+      radius = update_arc_radius(radius, false, opt.radius_min, opt.radius_max);
       ++cutback;
       if (cutback > opt.max_cutback) break;
     }

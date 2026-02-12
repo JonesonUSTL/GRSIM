@@ -23,6 +23,8 @@ add_library(gptsolver_core
   src/solver/linear/eigen_direct.cpp
   src/solver/linear/eigen_iterative.cpp
   src/solver/nonlinear/newton_solver.cpp
+  src/solver/nonlinear/increment_controller.cpp
+  src/solver/nonlinear/line_search.cpp
   src/physics/structural/structural_problem.cpp
   src/physics/thermal/thermal_problem.cpp
   src/ui/console_dashboard.cpp

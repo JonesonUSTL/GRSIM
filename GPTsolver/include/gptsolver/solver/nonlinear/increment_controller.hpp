@@ -1,3 +1,7 @@
 #pragma once
-// 占位头文件：solver/nonlinear/increment_controller.hpp
-namespace gptsolver { struct IncrementControllerPlaceholder {}; }
+namespace gptsolver {
+/**
+ * @brief 根据收敛行为调整弧长半径。
+ */
+double update_arc_radius(double current_radius, bool converged, double min_radius, double max_radius);
+}
