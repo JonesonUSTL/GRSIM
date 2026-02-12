@@ -35,3 +35,8 @@ add_test(NAME unit_contact_bucket COMMAND test_contact_bucket)
 add_executable(test_schur unit/test_schur.cpp)
 target_link_libraries(test_schur PRIVATE gptsolver_core)
 add_test(NAME unit_schur COMMAND test_schur)
+
+
+add_executable(test_projection unit/test_projection.cpp)
+target_link_libraries(test_projection PRIVATE gptsolver_core)
+add_test(NAME unit_projection COMMAND test_projection)

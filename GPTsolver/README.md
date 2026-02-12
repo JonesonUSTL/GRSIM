@@ -144,3 +144,21 @@ gptsolver examples --run <name>
 2. 接触搜索已到网格桶阶段，下一步做面-面投影 + 一致切线。
 3. 稀疏分块预条件器（Schur）+ PETSc/MPI 后端打通。
 4. 更完整的 Abaqus keyword 行为对齐与回归基线。
+
+
+## 9. 对标 Abaqus 可继续增加的功能清单
+
+### 9.1 近期（建议优先）
+1. 接触窄相：面-面投影 + 一致切线 + 粘滑状态历史变量。
+2. 壳单元：S4/S4R 多积分点与 hourglass 全量控制。
+3. 求解器：分块 Schur 预条件器（可配置）与 PETSc/MPI 真后端。
+4. 材料：J2 完整返回映射（各向同性/随动硬化）与温度相关参数。
+
+### 9.2 中期
+1. 动力学：隐式动力学（HHT/Newmark）与模态分析。
+2. 多物理场：热-结构强耦合、热膨胀一致切线。
+3. 子程序：UMAT/UEL 更完整 ABI 与样例插件。
+
+### 9.3 关键字扩展目标
+- `*COUPLING, *KINEMATIC, *AMPLITUDE, *CONTROLS, *SOLUTION TECHNIQUE`（本版已解析）
+- 后续：`*CONTACT CONTROLS, *GENERAL CONTACT, *SURFACE BEHAVIOR, *FILM, *RADIATION`

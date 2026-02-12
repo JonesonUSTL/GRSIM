@@ -6,6 +6,7 @@
 #include "gptsolver/assembly/assembler_structural.hpp"
 #include "gptsolver/assembly/assembler_thermal.hpp"
 #include "gptsolver/assembly/csr_matrix.hpp"
+#include "gptsolver/model/interaction/surface.hpp"
 #include "gptsolver/io/restart/checkpoint.hpp"
 #include "gptsolver/io/vtk/pvd_writer.hpp"
 #include "gptsolver/io/vtk/vtu_writer.hpp"
@@ -28,6 +29,9 @@ void run_structural_problem(const std::string& out_dir) {
   // 接触：第 20 个法向 DOF 与第 21 个切向 DOF，带少量穿透
   DenseVector rt = DenseVector::Zero(ndof);
   std::vector<ContactPointState> cps = {{20, 21, -1e-3, 5e-4, 0.0, true}};
+  TriangleFace tri{{0,0,0},{1,0,0},{0,1,0}};
+  auto prj = project_point_to_face({0.2,0.2,-1e-3}, tri);
+  if (prj && prj->inside) cps[0].normal_gap = prj->gap;
   assemble_contact_terms(cps, ContactParams{}, k, rt);
   f += rt;
 

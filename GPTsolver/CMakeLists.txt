@@ -33,6 +33,7 @@ add_library(gptsolver_core
   src/fem/constitutive/plastic/j2_return_mapping.cpp
   src/fem_shell_placeholder.cpp
   src/model/contact_pair.cpp
+  src/model/surface.cpp
 )
 
 target_include_directories(gptsolver_core PUBLIC include)

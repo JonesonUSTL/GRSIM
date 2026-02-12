@@ -9,7 +9,7 @@ std::vector<CompatibilityIssue> semantic_check(const ModelAst& ast) {
       "NSET", "ELSET", "SOLID SECTION", "MATERIAL", "ELASTIC", "DENSITY", "CONDUCTIVITY", "PLASTIC",
       "USER MATERIAL", "DEPVAR", "STEP", "STATIC", "HEAT TRANSFER", "END STEP", "BOUNDARY", "CLOAD",
       "DLOAD", "DSLOAD", "TEMPERATURE", "SURFACE", "CONTACT PAIR", "SURFACE INTERACTION", "FRICTION",
-      "OUTPUT", "NODE OUTPUT", "ELEMENT OUTPUT", "RESTART", "INCLUDE", "MPC"};
+      "OUTPUT", "NODE OUTPUT", "ELEMENT OUTPUT", "RESTART", "INCLUDE", "MPC", "COUPLING", "KINEMATIC", "AMPLITUDE", "CONTROLS", "SOLUTION TECHNIQUE"};
 
   std::vector<CompatibilityIssue> issues;
   for (const auto& b : ast.blocks) {
