@@ -4,7 +4,9 @@
 #include <fstream>
 #include <iomanip>
 #include <iostream>
+#include <map>
 #include <sstream>
+#include <vector>
 
 #include "gptsolver/core/logger.hpp"
 #include "gptsolver/io/inp/compatibility.hpp"
@@ -27,6 +29,62 @@ static std::string ts() {
   auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()).count() % 1000;
   oss << std::put_time(&tm, "%Y%m%d_%H%M%S") << "_" << std::setw(3) << std::setfill('0') << ms;
   return oss.str();
+}
+
+static fs::path examples_root() {
+  const fs::path p1 = "examples/inp";
+  if (fs::exists(p1)) return p1;
+  const fs::path p2 = "../examples/inp";
+  if (fs::exists(p2)) return p2;
+  return p1;
+}
+
+static std::vector<fs::path> discover_example_inp_files() {
+  std::vector<fs::path> files;
+  const auto root = examples_root();
+  if (!fs::exists(root)) return files;
+  for (const auto& e : fs::recursive_directory_iterator(root)) {
+    if (!e.is_regular_file()) continue;
+    if (e.path().extension() == ".inp") files.push_back(e.path());
+  }
+  std::sort(files.begin(), files.end());
+  return files;
+}
+
+static std::vector<std::string> list_example_names() {
+  std::map<std::string, fs::path> unique;
+  const auto files = discover_example_inp_files();
+  for (const auto& p : files) unique.emplace(p.stem().string(), p);
+  std::vector<std::string> out;
+  for (const auto& kv : unique) out.push_back(kv.first);
+  return out;
+}
+
+static std::string resolve_example_to_inp(const std::string& name) {
+  const auto root = examples_root();
+  auto normalize = [](std::string s) {
+    std::replace(s.begin(), s.end(), '\\', '/');
+    return s;
+  };
+  const std::string n = normalize(name);
+
+  if (n.find('/') != std::string::npos) {
+    fs::path rel = n;
+    if (rel.extension() != ".inp") rel += ".inp";
+    const auto candidate = root / rel;
+    if (fs::exists(candidate)) return candidate.string();
+    return {};
+  }
+
+  fs::path direct = root / (n + ".inp");
+  if (fs::exists(direct)) return direct.string();
+
+  std::vector<fs::path> hits;
+  for (const auto& p : discover_example_inp_files()) {
+    if (p.stem() == n) hits.push_back(p);
+  }
+  if (hits.size() == 1) return hits.front().string();
+  return {};
 }
 
 int main(int argc, char** argv) {
@@ -65,11 +123,20 @@ int main(int argc, char** argv) {
     return 0;
   }
   if (cmd == "examples" && argc >= 3 && std::string(argv[2]) == "--list") {
-    std::cout << "static_bar\nheat_rod\ncontact_demo\ncoupled_plate\nlarge_mesh_120el\ncantilever_beam\ntruss_tension\nofficial_like/official_cantilever_main\nofficial_like/official_heat_main\n";
+    const auto names = list_example_names();
+    for (const auto& n : names) std::cout << n << "\n";
     return 0;
   }
   if (cmd == "examples" && argc >= 4 && std::string(argv[2]) == "--run") {
-    std::cout << "请使用 run 命令执行 examples/inp/" << argv[3] << ".inp\n";
+    const std::string resolved = resolve_example_to_inp(argv[3]);
+    if (resolved.empty()) {
+      std::cout << "未找到示例: " << argv[3] << "\n";
+      std::cout << "可用示例名(可直接复制到 --run):\n";
+      for (const auto& n : list_example_names()) std::cout << "- " << n << "\n";
+      return 1;
+    }
+    std::cout << "已解析示例: " << argv[3] << " -> " << resolved << "\n";
+    std::cout << "请执行: gptsolver run " << resolved << " --out output/demo\n";
     return 0;
   }
 

@@ -55,3 +55,7 @@ add_test(NAME unit_frames COMMAND test_frames)
 add_executable(test_official_inp unit/test_official_inp.cpp)
 target_link_libraries(test_official_inp PRIVATE gptsolver_core)
 add_test(NAME unit_official_inp COMMAND test_official_inp)
+
+add_executable(test_official_contact_inp unit/test_official_contact_inp.cpp)
+target_link_libraries(test_official_contact_inp PRIVATE gptsolver_core)
+add_test(NAME unit_official_contact_inp COMMAND test_official_contact_inp)

@@ -62,6 +62,9 @@ gptsolver examples --list
 gptsolver examples --run <name>
 ```
 
+- `examples --list` 现在按 **文件名平铺** 展示（如 `official_cantilever_main`），不再要求带目录前缀。
+- `examples --run <name>` 支持直接传文件名，也支持 `official_like/official_contact_main` 这种相对路径。
+
 ---
 
 - `check` 会输出 `Parsed-Not-Solved` 与 `Unknown` 统计；可加 `--fail-on-unknown` 让 CI 在未知关键字时失败。
