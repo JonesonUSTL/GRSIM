@@ -50,3 +50,8 @@ add_test(NAME unit_keyword_dispatch COMMAND test_keyword_dispatch)
 add_executable(test_frames unit/test_frames.cpp)
 target_link_libraries(test_frames PRIVATE gptsolver_core)
 add_test(NAME unit_frames COMMAND test_frames)
+
+
+add_executable(test_official_inp unit/test_official_inp.cpp)
+target_link_libraries(test_official_inp PRIVATE gptsolver_core)
+add_test(NAME unit_official_inp COMMAND test_official_inp)

@@ -33,7 +33,7 @@ int main(int argc, char** argv) {
   if (argc < 2 || std::string(argv[1]) == "--help") {
     std::cout << "gptsolver 命令:\n"
               << "  gptsolver run <model.inp> --out <dir> [--threads N] [--solver-backend eigen|petsc] [--resume chk] [--frames N]\n"
-              << "  gptsolver check <model.inp>\n"
+              << "  gptsolver check <model.inp> [--fail-on-unknown]\n"
               << "  gptsolver info\n"
               << "  gptsolver examples --list\n"
               << "  gptsolver examples --run <name>\n"
@@ -65,7 +65,7 @@ int main(int argc, char** argv) {
     return 0;
   }
   if (cmd == "examples" && argc >= 3 && std::string(argv[2]) == "--list") {
-    std::cout << "static_bar\nheat_rod\ncontact_demo\ncoupled_plate\nlarge_mesh_120el\ncantilever_beam\ntruss_tension\n";
+    std::cout << "static_bar\nheat_rod\ncontact_demo\ncoupled_plate\nlarge_mesh_120el\ncantilever_beam\ntruss_tension\nofficial_like/official_cantilever_main\nofficial_like/official_heat_main\n";
     return 0;
   }
   if (cmd == "examples" && argc >= 4 && std::string(argv[2]) == "--run") {
@@ -79,8 +79,23 @@ int main(int argc, char** argv) {
   auto issues = inp::semantic_check(ast);
 
   if (cmd == "check") {
-    for (const auto& i : issues)
+    bool fail_on_unknown = false;
+    for (int i = 3; i < argc; ++i) {
+      if (std::string(argv[i]) == "--fail-on-unknown") fail_on_unknown = true;
+    }
+
+    int parsed = 0, unknown = 0;
+    for (const auto& i : issues) {
+      const auto tier = inp::classify_keyword(i.keyword);
+      if (tier == inp::KeywordTier::ParsedNotSolved) ++parsed;
+      if (tier == inp::KeywordTier::Unknown) ++unknown;
       std::cout << "[兼容告警] " << i.keyword << " " << i.pos.file << ':' << i.pos.line << " " << i.message << "\n";
+    }
+    std::cout << "[check统计] Parsed-Not-Solved=" << parsed << ", Unknown=" << unknown << "\n";
+    if (fail_on_unknown && unknown > 0) {
+      std::cout << "[check结果] 检测到 Unknown 关键字，按 --fail-on-unknown 返回失败\n";
+      return 2;
+    }
     return 0;
   }
 

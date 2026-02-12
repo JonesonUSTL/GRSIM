@@ -52,13 +52,15 @@ ctest --test-dir build/default --output-on-failure
 
 ```bash
 gptsolver run <model.inp> --out <dir> [--threads N] [--solver-backend eigen|petsc] [--resume checkpoint.bin] [--frames N]
-gptsolver check <model.inp>
+gptsolver check <model.inp> [--fail-on-unknown]
 gptsolver info
 gptsolver examples --list
 gptsolver examples --run <name>
 ```
 
 ---
+
+- `check` 会输出 `Parsed-Not-Solved` 与 `Unknown` 统计；可加 `--fail-on-unknown` 让 CI 在未知关键字时失败。
 
 ## 5. 支持清单（重点）
 
@@ -168,3 +170,17 @@ gptsolver examples --run <name>
 ### 9.3 关键字扩展目标
 - `*COUPLING, *KINEMATIC, *AMPLITUDE, *CONTROLS, *SOLUTION TECHNIQUE`（本版已解析）
 - 后续：`*CONTACT CONTROLS, *GENERAL CONTACT, *SURFACE BEHAVIOR, *FILM, *RADIATION`
+
+
+## 11. Abaqus 官方风格 inp 丰富化（当前进展）
+
+已新增官方常见组织方式示例：
+- PART/ASSEMBLY/INSTANCE
+- INCLUDE 网格拆分
+- MATERIAL + ELASTIC/DENSITY/CONDUCTIVITY/SPECIFIC HEAT
+- STEP + STATIC/HEAT TRANSFER + OUTPUT
+
+后续可继续增加：
+- *GENERAL CONTACT + *CONTACT CONTROLS 数值主链
+- *FILM/*RADIATION 热边界
+- *EL FILE/*NODE FILE 输出频率与变量子集
