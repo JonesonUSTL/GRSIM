@@ -11,6 +11,7 @@
 - *OUTPUT, *NODE OUTPUT, *ELEMENT OUTPUT（输出请求骨架）
 
 ## Parsed-Not-Solved
+- *CONTACT CONTROLS *GENERAL CONTACT *SURFACE BEHAVIOR（解析层）
 - *PLASTIC（仅 J2 演示，不是完整材料积分）
 - *USER MATERIAL / *DEPVAR（接口已连通，未完整数值耦合）
 - *DLOAD / *DSLOAD（解析存在，尚未完整装配）

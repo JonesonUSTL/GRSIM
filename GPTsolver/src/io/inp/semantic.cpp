@@ -1,19 +1,17 @@
 #include "gptsolver/io/inp/semantic.hpp"
 
-#include <set>
+#include "gptsolver/io/inp/keyword_dispatcher.hpp"
 
 namespace gptsolver::inp {
 std::vector<CompatibilityIssue> semantic_check(const ModelAst& ast) {
-  static const std::set<std::string> known = {
-      "HEADING", "PREPRINT", "PART", "ASSEMBLY", "INSTANCE", "END PART", "END ASSEMBLY", "NODE", "ELEMENT",
-      "NSET", "ELSET", "SOLID SECTION", "MATERIAL", "ELASTIC", "DENSITY", "CONDUCTIVITY", "PLASTIC",
-      "USER MATERIAL", "DEPVAR", "STEP", "STATIC", "HEAT TRANSFER", "END STEP", "BOUNDARY", "CLOAD",
-      "DLOAD", "DSLOAD", "TEMPERATURE", "SURFACE", "CONTACT PAIR", "SURFACE INTERACTION", "FRICTION",
-      "OUTPUT", "NODE OUTPUT", "ELEMENT OUTPUT", "RESTART", "INCLUDE", "MPC", "COUPLING", "KINEMATIC", "AMPLITUDE", "CONTROLS", "SOLUTION TECHNIQUE"};
-
   std::vector<CompatibilityIssue> issues;
   for (const auto& b : ast.blocks) {
-    if (!known.count(b.keyword)) issues.push_back({b.keyword, "已解析但当前版本未进入可执行求解主链", b.pos});
+    auto tier = classify_keyword(b.keyword);
+    if (tier == KeywordTier::Unknown) {
+      issues.push_back({b.keyword, "未识别关键字（可继续运行，但建议检查拼写或版本）", b.pos});
+    } else if (tier == KeywordTier::ParsedNotSolved) {
+      issues.push_back({b.keyword, "已解析但当前版本未进入可执行求解主链", b.pos});
+    }
     if (b.keyword == "PLASTIC" && b.data_lines.empty()) issues.push_back({b.keyword, "检测到 *PLASTIC 但缺少硬化数据", b.pos});
   }
   return issues;

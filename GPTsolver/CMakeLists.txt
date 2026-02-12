@@ -13,6 +13,7 @@ add_library(gptsolver_core
   src/io/inp/parser.cpp
   src/io/inp/semantic.cpp
   src/io/inp/compatibility.cpp
+  src/io/inp/keyword_dispatcher.cpp
   src/io/vtk/vtu_writer.cpp
   src/io/vtk/pvd_writer.cpp
   src/io/restart/checkpoint.cpp

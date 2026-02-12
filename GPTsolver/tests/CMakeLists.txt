@@ -40,3 +40,8 @@ add_test(NAME unit_schur COMMAND test_schur)
 add_executable(test_projection unit/test_projection.cpp)
 target_link_libraries(test_projection PRIVATE gptsolver_core)
 add_test(NAME unit_projection COMMAND test_projection)
+
+
+add_executable(test_keyword_dispatch unit/test_keyword_dispatch.cpp)
+target_link_libraries(test_keyword_dispatch PRIVATE gptsolver_core)
+add_test(NAME unit_keyword_dispatch COMMAND test_keyword_dispatch)

@@ -34,13 +34,23 @@ int main(int argc, char** argv) {
               << "  gptsolver check <model.inp>\n"
               << "  gptsolver info\n"
               << "  gptsolver examples --list\n"
-              << "  gptsolver examples --run <name>\n";
+              << "  gptsolver examples --run <name>\n"
+              << "  gptsolver roadmap\n";
     return 0;
   }
 
   const std::string cmd = argv[1];
   if (cmd == "info") {
     std::cout << "GPTsolver v0.2.0\n默认后端: Eigen 稀疏\n能力: 结构/热/耦合最小链路 + 接触 + MPC + 弧长法(演示)\n";
+    return 0;
+  }
+  if (cmd == "roadmap") {
+    std::cout << "Abaqus 对标增量功能清单:\n"
+              << "1) 接触: 面-面投影 + 一致切线 + 粘滑状态\n"
+              << "2) 单元: S4/S4R, C3D8R 多积分点与 hourglass\n"
+              << "3) 材料: 完整 J2 (各向同性/随动硬化)\n"
+              << "4) 求解: PETSc/MPI + Schur 预条件\n"
+              << "5) 关键字: *GENERAL CONTACT *CONTACT CONTROLS *SURFACE BEHAVIOR\n";
     return 0;
   }
   if (cmd == "examples" && argc >= 3 && std::string(argv[2]) == "--list") {
@@ -58,7 +68,8 @@ int main(int argc, char** argv) {
   auto issues = inp::semantic_check(ast);
 
   if (cmd == "check") {
-    for (const auto& i : issues) std::cout << "[兼容告警] " << i.keyword << " " << i.pos.file << ':' << i.pos.line << " " << i.message << "\n";
+    for (const auto& i : issues)
+      std::cout << "[兼容告警] " << i.keyword << " " << i.pos.file << ':' << i.pos.line << " " << i.message << "\n";
     return 0;
   }
 
@@ -95,15 +106,18 @@ int main(int argc, char** argv) {
       if (b.keyword == "STATIC") has_static = true;
       if (b.keyword == "HEAT TRANSFER") has_heat = true;
     }
-    if (has_static && has_heat) run_coupled_thermo_structural_problem(out);
-    else if (has_heat) run_thermal_problem(out);
-    else run_structural_problem(out);
+    if (has_static && has_heat)
+      run_coupled_thermo_structural_problem(out);
+    else if (has_heat)
+      run_thermal_problem(out);
+    else
+      run_structural_problem(out);
 
     std::ofstream(out + "/run_manifest.json")
         << "{\n  \"input\": \"" << inp_path << "\",\n  \"backend\": \"" << backend << "\",\n  \"threads\": " << threads
         << "\n}\n";
     std::ofstream(out + "/summary.md") << "# 运行简报\n\n- 输入: " << inp_path << "\n- 兼容告警数: " << issues.size()
-                                    << "\n- 下一步建议: 深化接触搜索/壳单元/真实材料积分与稀疏分块预条件器。\n";
+                                      << "\n- 下一步建议: 深化接触搜索/壳单元/真实材料积分与稀疏分块预条件器。\n";
     global_logger().info("完成");
     return 0;
   }
