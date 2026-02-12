@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.20)
-project(GPTsolver VERSION 0.1.0 LANGUAGES CXX)
+project(GPTsolver VERSION 0.2.0 LANGUAGES CXX)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 include(Options)
@@ -16,9 +16,12 @@ add_library(gptsolver_core
   src/io/vtk/vtu_writer.cpp
   src/io/vtk/pvd_writer.cpp
   src/io/restart/checkpoint.cpp
+  src/assembly/csr_matrix.cpp
   src/assembly/assembler_structural.cpp
   src/assembly/assembler_thermal.cpp
+  src/assembly/assembler_contact_placeholder.cpp
   src/solver/linear/eigen_direct.cpp
+  src/solver/linear/eigen_iterative.cpp
   src/solver/nonlinear/newton_solver.cpp
   src/physics/structural/structural_problem.cpp
   src/physics/thermal/thermal_problem.cpp

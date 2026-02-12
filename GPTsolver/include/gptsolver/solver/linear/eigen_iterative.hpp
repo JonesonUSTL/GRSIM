@@ -1,3 +1,11 @@
 #pragma once
-// 占位头文件：solver/linear/eigen_iterative.hpp
-namespace gptsolver { struct EigenIterativePlaceholder {}; }
+#include "gptsolver/assembly/csr_matrix.hpp"
+
+namespace gptsolver {
+struct IterativeResult {
+  DenseVector x;
+  int iterations{0};
+  double error{0.0};
+};
+IterativeResult solve_linear_cg(const SparseMatrix& k, const DenseVector& f, int max_iter = 500);
+}

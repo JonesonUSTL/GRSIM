@@ -16,13 +16,14 @@
 namespace fs = std::filesystem;
 using namespace gptsolver;
 
-std::string ts() {
+static std::string ts() {
   auto now = std::chrono::system_clock::now();
   auto tt = std::chrono::system_clock::to_time_t(now);
   std::tm tm{};
   localtime_r(&tt, &tm);
   std::ostringstream oss;
-  oss << std::put_time(&tm, "%Y%m%d_%H%M%S");
+  auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()).count() % 1000;
+  oss << std::put_time(&tm, "%Y%m%d_%H%M%S") << "_" << std::setw(3) << std::setfill('0') << ms;
   return oss.str();
 }
 
@@ -39,19 +40,16 @@ int main(int argc, char** argv) {
 
   const std::string cmd = argv[1];
   if (cmd == "info") {
-    std::cout << "GPTsolver v0.1.0\n默认后端: Eigen\nOpenMP: enabled-if-compiled\nPETSc: placeholder\n";
+    std::cout << "GPTsolver v0.2.0\n默认后端: Eigen 稀疏\n能力: 结构/热/耦合最小链路 + 接触 + MPC + 弧长法(演示)\n";
     return 0;
   }
-
-  if (cmd == "examples") {
-    if (argc >= 3 && std::string(argv[2]) == "--list") {
-      std::cout << "static_bar\nheat_rod\ncontact_demo\nplastic_demo\nsubroutine_demo\n";
-      return 0;
-    }
-    if (argc >= 4 && std::string(argv[2]) == "--run") {
-      std::cout << "请使用 run 命令执行 examples/inp/" << argv[3] << ".inp\n";
-      return 0;
-    }
+  if (cmd == "examples" && argc >= 3 && std::string(argv[2]) == "--list") {
+    std::cout << "static_bar\nheat_rod\ncontact_demo\ncoupled_plate\nlarge_mesh_120el\n";
+    return 0;
+  }
+  if (cmd == "examples" && argc >= 4 && std::string(argv[2]) == "--run") {
+    std::cout << "请使用 run 命令执行 examples/inp/" << argv[3] << ".inp\n";
+    return 0;
   }
 
   if (argc < 3) return 1;
@@ -60,38 +58,51 @@ int main(int argc, char** argv) {
   auto issues = inp::semantic_check(ast);
 
   if (cmd == "check") {
-    for (const auto& i : issues) {
-      std::cout << "[兼容告警] " << i.keyword << " " << i.pos.file << ":" << i.pos.line << " " << i.message << "\n";
-    }
+    for (const auto& i : issues) std::cout << "[兼容告警] " << i.keyword << " " << i.pos.file << ':' << i.pos.line << " " << i.message << "\n";
     return 0;
   }
 
   if (cmd == "run") {
     std::string out = "output/run_" + ts();
+    int threads = 1;
+    std::string backend = "eigen";
+    std::string resume;
     for (int i = 3; i < argc; ++i) {
-      if (std::string(argv[i]) == "--out" && i + 1 < argc) out = argv[++i];
+      const std::string a = argv[i];
+      if (a == "--out" && i + 1 < argc) out = std::string(argv[++i]) + "/run_" + ts();
+      if (a == "--threads" && i + 1 < argc) threads = std::stoi(argv[++i]);
+      if (a == "--solver-backend" && i + 1 < argc) backend = argv[++i];
+      if (a == "--resume" && i + 1 < argc) resume = argv[++i];
     }
+
     fs::create_directories(out);
     global_logger().open(out + "/run.log");
-    global_logger().info("启动求解");
+    global_logger().info("启动求解, backend=" + backend + ", threads=" + std::to_string(threads));
+    if (!resume.empty()) global_logger().info("从检查点恢复: " + resume);
     inp::write_compatibility_report(out + "/compatibility_report.md", issues);
 
     StatusSnapshot s;
-    s.job_name = "demo_job";
+    s.job_name = "abaqus_like_job";
     s.input_file = inp_path;
     s.output_dir = out;
     s.step = 1;
     s.increment = 1;
     render_dashboard(s);
 
-    bool thermal = false;
+    bool has_static = false, has_heat = false;
     for (const auto& b : ast.blocks) {
-      if (b.keyword == "HEAT TRANSFER") thermal = true;
+      if (b.keyword == "STATIC") has_static = true;
+      if (b.keyword == "HEAT TRANSFER") has_heat = true;
     }
-    if (thermal) run_thermal_problem(out); else run_structural_problem(out);
+    if (has_static && has_heat) run_coupled_thermo_structural_problem(out);
+    else if (has_heat) run_thermal_problem(out);
+    else run_structural_problem(out);
 
-    std::ofstream(out + "/run_manifest.json") << "{\n  \"input\": \"" << inp_path << "\",\n  \"backend\": \"eigen\"\n}\n";
-    std::ofstream(out + "/summary.md") << "# 运行简报\n\n- 输入: " << inp_path << "\n- 兼容告警数: " << issues.size() << "\n";
+    std::ofstream(out + "/run_manifest.json")
+        << "{\n  \"input\": \"" << inp_path << "\",\n  \"backend\": \"" << backend << "\",\n  \"threads\": " << threads
+        << "\n}\n";
+    std::ofstream(out + "/summary.md") << "# 运行简报\n\n- 输入: " << inp_path << "\n- 兼容告警数: " << issues.size()
+                                    << "\n- 下一步建议: 深化接触搜索/壳单元/真实材料积分与稀疏分块预条件器。\n";
     global_logger().info("完成");
     return 0;
   }

@@ -1,6 +1,6 @@
 #pragma once
-#include <Eigen/Dense>
+#include "gptsolver/assembly/csr_matrix.hpp"
 
 namespace gptsolver {
-Eigen::VectorXd solve_linear(const Eigen::MatrixXd& k, const Eigen::VectorXd& f);
+DenseVector solve_linear_sparse(const SparseMatrix& k, const DenseVector& f);
 }
