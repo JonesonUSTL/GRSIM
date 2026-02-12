@@ -25,16 +25,17 @@
 
 ### 2.2 Windows（PowerShell）
 ```powershell
-.\scripts\deploy_windows.ps1
+./scripts/deploy_windows.ps1
+# 或跳过依赖安装：./scripts/deploy_windows.ps1 -SkipInstall
 ```
-脚本会自动执行：winget 安装 CMake/Ninja/Git、构建、测试、冒烟运行。
+脚本会自动执行：依赖安装（可跳过）、构建、测试、冒烟运行；并且可从任意当前目录启动（脚本会自动切到仓库根目录）。
 
 ### 2.3 Windows（CMD）
 ```bat
 scripts\deploy_windows.bat
 ```
-> 如果你在 **PowerShell** 里调用 `.bat`，请使用 `cmd /c scripts\deploy_windows.bat` 或直接改用 `./scripts/deploy_windows.ps1`；
-> 直接输入 `scripts\deploy_windows.bat` 会被 PowerShell 当作模块路径解析并报错。
+> 若在 **PowerShell** 中调用 `.bat`，请使用 `./scripts/deploy_windows.bat` 或 `cmd /c scripts\deploy_windows.bat`。
+> 直接输入 `scripts\deploy_windows.bat` 会被 PowerShell 按“模块限定命令”解析，触发 `CouldNotAutoLoadModule`。
 
 
 ---
