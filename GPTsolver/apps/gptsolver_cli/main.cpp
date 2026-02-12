@@ -7,6 +7,7 @@
 
 #include "gptsolver/core/logger.hpp"
 #include "gptsolver/io/inp/compatibility.hpp"
+#include "gptsolver/io/inp/keyword_dispatcher.hpp"
 #include "gptsolver/io/inp/parser.hpp"
 #include "gptsolver/io/inp/semantic.hpp"
 #include "gptsolver/physics/structural/structural_problem.hpp"
@@ -35,7 +36,8 @@ int main(int argc, char** argv) {
               << "  gptsolver info\n"
               << "  gptsolver examples --list\n"
               << "  gptsolver examples --run <name>\n"
-              << "  gptsolver roadmap\n";
+              << "  gptsolver roadmap\n"
+              << "  gptsolver capabilities\n";
     return 0;
   }
 
@@ -44,6 +46,14 @@ int main(int argc, char** argv) {
     std::cout << "GPTsolver v0.2.0\n默认后端: Eigen 稀疏\n能力: 结构/热/耦合最小链路 + 接触 + MPC + 弧长法(演示)\n";
     return 0;
   }
+  if (cmd == "capabilities") {
+    std::cout << "Supported-Executable keywords:\n";
+    for (const auto& k : inp::all_supported_executable_keywords()) std::cout << "- " << k << "\n";
+    std::cout << "\nParsed-Not-Solved keywords:\n";
+    for (const auto& k : inp::all_parsed_not_solved_keywords()) std::cout << "- " << k << "\n";
+    return 0;
+  }
+
   if (cmd == "roadmap") {
     std::cout << "Abaqus 对标增量功能清单:\n"
               << "1) 接触: 面-面投影 + 一致切线 + 粘滑状态\n"
