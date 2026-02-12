@@ -33,6 +33,9 @@
 ```bat
 scripts\deploy_windows.bat
 ```
+> 如果你在 **PowerShell** 里调用 `.bat`，请使用 `cmd /c scripts\deploy_windows.bat` 或直接改用 `./scripts/deploy_windows.ps1`；
+> 直接输入 `scripts\deploy_windows.bat` 会被 PowerShell 当作模块路径解析并报错。
+
 
 ---
 
