@@ -1,0 +1,2 @@
+option(GPTSOLVER_ENABLE_OPENMP "Enable OpenMP assembly" ON)
+option(GPTSOLVER_ENABLE_PETSC "Enable PETSc backend placeholder" OFF)

@@ -1,0 +1,4 @@
+@echo off
+cmake --preset default
+cmake --build --preset default
+ctest --preset default
