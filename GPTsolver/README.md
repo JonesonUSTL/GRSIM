@@ -51,7 +51,7 @@ ctest --test-dir build/default --output-on-failure
 ## 4. 命令行
 
 ```bash
-gptsolver run <model.inp> --out <dir> [--threads N] [--solver-backend eigen|petsc] [--resume checkpoint.bin]
+gptsolver run <model.inp> --out <dir> [--threads N] [--solver-backend eigen|petsc] [--resume checkpoint.bin] [--frames N]
 gptsolver check <model.inp>
 gptsolver info
 gptsolver examples --list
@@ -111,7 +111,13 @@ gptsolver examples --run <name>
 
 ---
 
-## 6. 案例与回归
+## 6. 帧输出（对标 Abaqus 过程输出）
+
+- 稳态问题也支持过程帧输出。
+- `--frames N` 控制输出帧数，默认 `10`。
+- 输出文件：`results/step_1/frame_0001.vtu ... frame_00NN.vtu` 与 `results.pvd`。
+
+## 7. 案例与回归
 
 ```bash
 ./build/default/gptsolver run examples/inp/static/static_bar.inp --out output/reg
@@ -128,7 +134,7 @@ gptsolver examples --run <name>
 
 ---
 
-## 7. 文档导航
+## 8. 文档导航
 
 - `docs/03_用户手册_从零开始.md`
 - `docs/06_求解器算法说明.md`
@@ -138,7 +144,7 @@ gptsolver examples --run <name>
 
 ---
 
-## 8. 下一步升级建议（本版后）
+## 9. 下一步升级建议（本版后）
 
 1. 壳/实体真实积分点与 hourglass 控制（优先）。
 2. 接触搜索已到网格桶阶段，下一步做面-面投影 + 一致切线。
@@ -146,7 +152,7 @@ gptsolver examples --run <name>
 4. 更完整的 Abaqus keyword 行为对齐与回归基线。
 
 
-## 9. 对标 Abaqus 可继续增加的功能清单
+## 10. 对标 Abaqus 可继续增加的功能清单
 
 ### 9.1 近期（建议优先）
 1. 接触窄相：面-面投影 + 一致切线 + 粘滑状态历史变量。

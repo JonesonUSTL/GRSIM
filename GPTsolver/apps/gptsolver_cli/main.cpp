@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <chrono>
 #include <filesystem>
 #include <fstream>
@@ -31,7 +32,7 @@ static std::string ts() {
 int main(int argc, char** argv) {
   if (argc < 2 || std::string(argv[1]) == "--help") {
     std::cout << "gptsolver 命令:\n"
-              << "  gptsolver run <model.inp> --out <dir> [--threads N] [--solver-backend eigen|petsc] [--resume chk]\n"
+              << "  gptsolver run <model.inp> --out <dir> [--threads N] [--solver-backend eigen|petsc] [--resume chk] [--frames N]\n"
               << "  gptsolver check <model.inp>\n"
               << "  gptsolver info\n"
               << "  gptsolver examples --list\n"
@@ -64,7 +65,7 @@ int main(int argc, char** argv) {
     return 0;
   }
   if (cmd == "examples" && argc >= 3 && std::string(argv[2]) == "--list") {
-    std::cout << "static_bar\nheat_rod\ncontact_demo\ncoupled_plate\nlarge_mesh_120el\n";
+    std::cout << "static_bar\nheat_rod\ncontact_demo\ncoupled_plate\nlarge_mesh_120el\ncantilever_beam\ntruss_tension\n";
     return 0;
   }
   if (cmd == "examples" && argc >= 4 && std::string(argv[2]) == "--run") {
@@ -88,12 +89,14 @@ int main(int argc, char** argv) {
     int threads = 1;
     std::string backend = "eigen";
     std::string resume;
+    int frames = 10;
     for (int i = 3; i < argc; ++i) {
       const std::string a = argv[i];
       if (a == "--out" && i + 1 < argc) out = std::string(argv[++i]) + "/run_" + ts();
       if (a == "--threads" && i + 1 < argc) threads = std::stoi(argv[++i]);
       if (a == "--solver-backend" && i + 1 < argc) backend = argv[++i];
       if (a == "--resume" && i + 1 < argc) resume = argv[++i];
+      if (a == "--frames" && i + 1 < argc) frames = std::max(1, std::stoi(argv[++i]));
     }
 
     fs::create_directories(out);
@@ -117,16 +120,17 @@ int main(int argc, char** argv) {
       if (b.keyword == "HEAT TRANSFER") has_heat = true;
     }
     if (has_static && has_heat)
-      run_coupled_thermo_structural_problem(out);
+      run_coupled_thermo_structural_problem(out, frames);
     else if (has_heat)
-      run_thermal_problem(out);
+      run_thermal_problem(out, frames);
     else
-      run_structural_problem(out);
+      run_structural_problem(out, frames);
 
     std::ofstream(out + "/run_manifest.json")
-        << "{\n  \"input\": \"" << inp_path << "\",\n  \"backend\": \"" << backend << "\",\n  \"threads\": " << threads
+        << "{\n  \"input\": \"" << inp_path << "\",\n  \"backend\": \"" << backend << "\",\n  \"threads\": " << threads << ",\n  \"frames\": " << frames
         << "\n}\n";
     std::ofstream(out + "/summary.md") << "# 运行简报\n\n- 输入: " << inp_path << "\n- 兼容告警数: " << issues.size()
+                                      << "\n- 输出帧数: " << frames
                                       << "\n- 下一步建议: 深化接触搜索/壳单元/真实材料积分与稀疏分块预条件器。\n";
     global_logger().info("完成");
     return 0;

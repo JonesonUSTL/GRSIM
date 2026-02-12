@@ -1,36 +1,42 @@
 #include "gptsolver/physics/structural/structural_problem.hpp"
 
 #include <filesystem>
+#include <iomanip>
+#include <sstream>
 
 #include "gptsolver/assembly/assembler_contact_placeholder.hpp"
 #include "gptsolver/assembly/assembler_structural.hpp"
 #include "gptsolver/assembly/assembler_thermal.hpp"
 #include "gptsolver/assembly/csr_matrix.hpp"
-#include "gptsolver/model/interaction/surface.hpp"
 #include "gptsolver/io/restart/checkpoint.hpp"
 #include "gptsolver/io/vtk/pvd_writer.hpp"
 #include "gptsolver/io/vtk/vtu_writer.hpp"
+#include "gptsolver/model/interaction/surface.hpp"
 #include "gptsolver/solver/linear/eigen_iterative.hpp"
 #include "gptsolver/solver/linear/schur_preconditioner.hpp"
 #include "gptsolver/solver/nonlinear/newton_solver.hpp"
 
 namespace gptsolver {
+namespace {
+std::string frame_name(int i) {
+  std::ostringstream oss;
+  oss << "frame_" << std::setw(4) << std::setfill('0') << i << ".vtu";
+  return oss.str();
+}
+}
 
-void run_structural_problem(const std::string& out_dir) {
+void run_structural_problem(const std::string& out_dir, int frames) {
   std::filesystem::create_directories(out_dir + "/results/step_1");
   constexpr int ndof = 128;
 
   auto k = build_structural_stiffness_sparse(ndof);
   auto f = build_structural_load(ndof);
-
-  // 显式 MPC/Lagrange 约束：将 0 号与 1 号自由度耦合
   k += assemble_mpc_lagrange(ndof, 0, 1, 1.0);
 
-  // 接触：第 20 个法向 DOF 与第 21 个切向 DOF，带少量穿透
   DenseVector rt = DenseVector::Zero(ndof);
   std::vector<ContactPointState> cps = {{20, 21, -1e-3, 5e-4, 0.0, true}};
-  TriangleFace tri{{0,0,0},{1,0,0},{0,1,0}};
-  auto prj = project_point_to_face({0.2,0.2,-1e-3}, tri);
+  TriangleFace tri{{0, 0, 0}, {1, 0, 0}, {0, 1, 0}};
+  auto prj = project_point_to_face({0.2, 0.2, -1e-3}, tri);
   if (prj && prj->inside) cps[0].normal_gap = prj->gap;
   assemble_contact_terms(cps, ContactParams{}, k, rt);
   f += rt;
@@ -40,21 +46,30 @@ void run_structural_problem(const std::string& out_dir) {
   auto nr = solve_newton_with_arclength(k, f, DenseVector::Zero(ndof), opt);
 
   std::vector<double> coords;
-  std::vector<double> u;
+  std::vector<double> u_final;
   coords.reserve(ndof * 3);
-  u.reserve(ndof);
+  u_final.reserve(ndof);
   for (int i = 0; i < ndof; ++i) {
     coords.push_back(static_cast<double>(i));
     coords.push_back(0.0);
     coords.push_back(0.0);
-    u.push_back(nr.x(i));
+    u_final.push_back(nr.x(i));
   }
-  vtkio::write_simple_vtu(out_dir + "/results/step_1/frame_0001.vtu", coords, u, "U");
-  vtkio::write_pvd(out_dir + "/results/results.pvd", {{1.0, "step_1/frame_0001.vtu"}});
-  restart::write_checkpoint(out_dir + "/checkpoint_0001.bin", u);
+
+  std::vector<std::pair<double, std::string>> timeline;
+  for (int i = 1; i <= frames; ++i) {
+    const double alpha = static_cast<double>(i) / static_cast<double>(frames);
+    std::vector<double> u = u_final;
+    for (auto& v : u) v *= alpha;
+    const auto fn = frame_name(i);
+    vtkio::write_simple_vtu(out_dir + "/results/step_1/" + fn, coords, u, "U");
+    timeline.emplace_back(alpha, "step_1/" + fn);
+  }
+  vtkio::write_pvd(out_dir + "/results/results.pvd", timeline);
+  restart::write_checkpoint(out_dir + "/checkpoint_0001.bin", u_final);
 }
 
-void run_coupled_thermo_structural_problem(const std::string& out_dir) {
+void run_coupled_thermo_structural_problem(const std::string& out_dir, int frames) {
   std::filesystem::create_directories(out_dir + "/results/step_1");
   constexpr int n = 64;
   auto kuu = build_structural_stiffness_sparse(n);
@@ -71,17 +86,26 @@ void run_coupled_thermo_structural_problem(const std::string& out_dir) {
   if (x_schur.size() == it.x.size()) it.x = 0.5 * it.x + 0.5 * x_schur;
 
   std::vector<double> coords;
-  std::vector<double> temp;
+  std::vector<double> temp_final;
   coords.reserve(n * 3);
-  temp.reserve(n);
+  temp_final.reserve(n);
   for (int i = 0; i < n; ++i) {
     coords.push_back(static_cast<double>(i));
     coords.push_back(1.0);
     coords.push_back(0.0);
-    temp.push_back(it.x(n + i));
+    temp_final.push_back(it.x(n + i));
   }
-  vtkio::write_simple_vtu(out_dir + "/results/step_1/frame_0001.vtu", coords, temp, "TEMP");
-  vtkio::write_pvd(out_dir + "/results/results.pvd", {{1.0, "step_1/frame_0001.vtu"}});
+
+  std::vector<std::pair<double, std::string>> timeline;
+  for (int i = 1; i <= frames; ++i) {
+    const double alpha = static_cast<double>(i) / static_cast<double>(frames);
+    std::vector<double> temp = temp_final;
+    for (auto& v : temp) v *= alpha;
+    const auto fn = frame_name(i);
+    vtkio::write_simple_vtu(out_dir + "/results/step_1/" + fn, coords, temp, "TEMP");
+    timeline.emplace_back(alpha, "step_1/" + fn);
+  }
+  vtkio::write_pvd(out_dir + "/results/results.pvd", timeline);
 }
 
 }  // namespace gptsolver

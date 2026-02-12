@@ -45,3 +45,8 @@ add_test(NAME unit_projection COMMAND test_projection)
 add_executable(test_keyword_dispatch unit/test_keyword_dispatch.cpp)
 target_link_libraries(test_keyword_dispatch PRIVATE gptsolver_core)
 add_test(NAME unit_keyword_dispatch COMMAND test_keyword_dispatch)
+
+
+add_executable(test_frames unit/test_frames.cpp)
+target_link_libraries(test_frames PRIVATE gptsolver_core)
+add_test(NAME unit_frames COMMAND test_frames)
