@@ -1,4 +1,6 @@
 #pragma once
+#include <unordered_map>
+#include <utility>
 #include <vector>
 
 namespace gptsolver {
@@ -11,6 +13,20 @@ struct SurfaceBBox {
 };
 
 /**
+ * @brief 网格桶 key。
+ */
+struct BucketKey {
+  int ix{0}, iy{0}, iz{0};
+  bool operator==(const BucketKey& o) const { return ix == o.ix && iy == o.iy && iz == o.iz; }
+};
+
+struct BucketKeyHash {
+  std::size_t operator()(const BucketKey& k) const {
+    return static_cast<std::size_t>((k.ix * 73856093) ^ (k.iy * 19349663) ^ (k.iz * 83492791));
+  }
+};
+
+/**
  * @brief 判断两个包围盒是否相交。
  */
 bool bbox_overlap(const SurfaceBBox& a, const SurfaceBBox& b);
@@ -20,5 +36,12 @@ bool bbox_overlap(const SurfaceBBox& a, const SurfaceBBox& b);
  */
 std::vector<std::pair<int, int>> build_contact_candidates(const std::vector<SurfaceBBox>& master,
                                                           const std::vector<SurfaceBBox>& slave);
+
+/**
+ * @brief 通过统一体素网格桶建立候选对，降低 O(N*M) 的常数开销。
+ */
+std::vector<std::pair<int, int>> build_contact_candidates_bucket(const std::vector<SurfaceBBox>& master,
+                                                                 const std::vector<SurfaceBBox>& slave,
+                                                                 double cell);
 
 }  // namespace gptsolver

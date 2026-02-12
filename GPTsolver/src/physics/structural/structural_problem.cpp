@@ -10,6 +10,7 @@
 #include "gptsolver/io/vtk/pvd_writer.hpp"
 #include "gptsolver/io/vtk/vtu_writer.hpp"
 #include "gptsolver/solver/linear/eigen_iterative.hpp"
+#include "gptsolver/solver/linear/schur_preconditioner.hpp"
 #include "gptsolver/solver/nonlinear/newton_solver.hpp"
 
 namespace gptsolver {
@@ -61,7 +62,9 @@ void run_coupled_thermo_structural_problem(const std::string& out_dir) {
   DenseVector rhs(2 * n);
   rhs << build_structural_load(n), build_thermal_rhs(n);
 
+  auto x_schur = solve_block_schur(kuu, kut, ktu, ktt, rhs);
   auto it = solve_linear_cg(k, rhs, 800);
+  if (x_schur.size() == it.x.size()) it.x = 0.5 * it.x + 0.5 * x_schur;
 
   std::vector<double> coords;
   std::vector<double> temp;

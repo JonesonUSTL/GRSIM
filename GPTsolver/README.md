@@ -77,11 +77,11 @@ gptsolver examples --run <name>
 | 模块 | 能力 | 状态 |
 |---|---|---|
 | 线性求解 | Sparse LDLT | 已实现 |
-| 迭代求解 | CG | 已实现 |
+| 迭代求解 | CG + 分块 Schur 近似 | 已实现 |
 | 非线性 | Newton + 弧长法 | 已实现（演示级） |
 | 线搜索 | Backtracking | 已实现 |
 | 增量控制 | cutback + radius 自适应 | 已实现 |
-| 接触 | 法向 penalty + 切向摩擦限幅 | 已实现（演示级） |
+| 接触 | 法向 penalty + 切向摩擦限幅 + bbox/网格桶候选搜索 | 已实现（演示级） |
 | 约束 | MPC/Lagrange（penalty 近似） | 已实现 |
 | 耦合 | 结构-热分块组装与联立求解 | 已实现 |
 | 并行 | OpenMP 装配并行 | 已实现 |
@@ -141,6 +141,6 @@ gptsolver examples --run <name>
 ## 8. 下一步升级建议（本版后）
 
 1. 壳/实体真实积分点与 hourglass 控制（优先）。
-2. 接触搜索从 bbox 粗筛升级到网格桶 + 面-面投影 + 一致切线。
+2. 接触搜索已到网格桶阶段，下一步做面-面投影 + 一致切线。
 3. 稀疏分块预条件器（Schur）+ PETSc/MPI 后端打通。
 4. 更完整的 Abaqus keyword 行为对齐与回归基线。

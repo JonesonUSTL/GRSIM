@@ -26,3 +26,12 @@ add_test(NAME unit_contact_search COMMAND test_contact_search)
 add_executable(test_shell unit/test_shell.cpp)
 target_link_libraries(test_shell PRIVATE gptsolver_core)
 add_test(NAME unit_shell COMMAND test_shell)
+
+
+add_executable(test_contact_bucket unit/test_contact_bucket.cpp)
+target_link_libraries(test_contact_bucket PRIVATE gptsolver_core)
+add_test(NAME unit_contact_bucket COMMAND test_contact_bucket)
+
+add_executable(test_schur unit/test_schur.cpp)
+target_link_libraries(test_schur PRIVATE gptsolver_core)
+add_test(NAME unit_schur COMMAND test_schur)

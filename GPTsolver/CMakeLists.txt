@@ -22,6 +22,7 @@ add_library(gptsolver_core
   src/assembly/assembler_contact_placeholder.cpp
   src/solver/linear/eigen_direct.cpp
   src/solver/linear/eigen_iterative.cpp
+  src/solver/linear/schur_preconditioner.cpp
   src/solver/nonlinear/newton_solver.cpp
   src/solver/nonlinear/increment_controller.cpp
   src/solver/nonlinear/line_search.cpp
