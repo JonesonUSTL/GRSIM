@@ -30,6 +30,8 @@ add_library(gptsolver_core
   src/ui/console_dashboard.cpp
   src/subroutine/subroutine_api.cpp
   src/fem/constitutive/plastic/j2_return_mapping.cpp
+  src/fem_shell_placeholder.cpp
+  src/model/contact_pair.cpp
 )
 
 target_include_directories(gptsolver_core PUBLIC include)

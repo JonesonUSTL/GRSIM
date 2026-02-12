@@ -78,6 +78,7 @@ int main(int argc, char** argv) {
     fs::create_directories(out);
     global_logger().open(out + "/run.log");
     global_logger().info("启动求解, backend=" + backend + ", threads=" + std::to_string(threads));
+    if (backend == "petsc") global_logger().warn("当前 PETSc 为接口占位，将自动回退 Eigen 稀疏求解");
     if (!resume.empty()) global_logger().info("从检查点恢复: " + resume);
     inp::write_compatibility_report(out + "/compatibility_report.md", issues);
 

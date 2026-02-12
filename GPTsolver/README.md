@@ -1,6 +1,6 @@
 # GPTsolver（Abaqus 对标路线：非线性结构静力 + 热学 + 耦合）
 
-> 这是一个“可运行 + 可扩展”的 C++20 FEM 平台。当前版本强调**工程骨架完整性**与**可持续扩展**，并已具备接触/MPC/弧长法/结构-热耦合的可执行演示链路。
+> 这是一个“可运行 + 可扩展”的 C++20 FEM 平台。当前版本强调**工程骨架完整性**与**可持续扩展**，并已具备接触/MPC/弧长法/结构-热耦合的可执行演示链路，并新增接触 bbox 粗搜索与壳 hourglass 稳定项占位。
 
 ---
 
@@ -70,7 +70,7 @@ gptsolver examples --run <name>
 | 平面 | CPS4 / CPE4 | 接口/占位 + 求解演示链路 |
 | 杆 | T3D2 | 可用于示例模型 |
 | 梁 | beam_placeholder | 占位 |
-| 壳 | shell_placeholder | 占位（后续补多积分点/hourglass） |
+| 壳 | shell_placeholder | 已提供积分点策略与 hourglass 稳定项占位 |
 
 ### 5.2 算法支持现状
 
@@ -85,7 +85,7 @@ gptsolver examples --run <name>
 | 约束 | MPC/Lagrange（penalty 近似） | 已实现 |
 | 耦合 | 结构-热分块组装与联立求解 | 已实现 |
 | 并行 | OpenMP 装配并行 | 已实现 |
-| PETSc | 后端接口 | 占位 |
+| PETSc | 后端接口 | 占位（CLI 会给出回退提示） |
 
 ### 5.3 功能支持现状
 
@@ -141,6 +141,6 @@ gptsolver examples --run <name>
 ## 8. 下一步升级建议（本版后）
 
 1. 壳/实体真实积分点与 hourglass 控制（优先）。
-2. 接触搜索（bbox + 网格桶 + 面-面投影）与一致切线。
+2. 接触搜索从 bbox 粗筛升级到网格桶 + 面-面投影 + 一致切线。
 3. 稀疏分块预条件器（Schur）+ PETSc/MPI 后端打通。
 4. 更完整的 Abaqus keyword 行为对齐与回归基线。
