@@ -105,20 +105,48 @@ gptsolver examples --run <name>
 - [x] 日志 + 清单 + 兼容报告 + 检查点
 - [x] VTU/PVD 多文件输出
 - [x] 运行状态面板（TUI）
-- [ ] 壳单元多积分点 + hourglass 控制（下一阶段）
-- [ ] 完整 J2 返回映射与多材料库耦合（下一阶段）
+- [x] 壳单元多积分点（1x1/2x2 演示）+ hourglass 稳定项系数（演示）
+- [x] J2 径向回归（各向同性硬化，演示）+ 多材料库耦合骨架
 
-### 5.4 inp 关键字（当前）
+### 5.4 inp 关键字（当前，Abaqus 对标）
 
 **Supported-Executable / 部分可执行**
-- `*HEADING, *NODE, *ELEMENT, *NSET, *ELSET`
+- `*HEADING, *PREPRINT, *PART, *ASSEMBLY, *INSTANCE, *END PART, *END ASSEMBLY`
+- `*NODE, *ELEMENT, *NSET, *ELSET, *SOLID SECTION, *SHELL SECTION, *SECTION CONTROLS`
+- `*MATERIAL, *ELASTIC, *DENSITY, *CONDUCTIVITY`
 - `*STEP, *STATIC, *HEAT TRANSFER, *END STEP`
 - `*BOUNDARY, *CLOAD, *TEMPERATURE`
 - `*SURFACE, *CONTACT PAIR, *SURFACE INTERACTION, *FRICTION`
-- `*MPC, *INCLUDE, *OUTPUT, *NODE OUTPUT, *ELEMENT OUTPUT`
+- `*MPC, *INCLUDE, *RESTART, *OUTPUT, *NODE OUTPUT, *ELEMENT OUTPUT`
 
-**Parsed-Not-Solved**
-- `*PLASTIC, *USER MATERIAL, *DEPVAR, *DLOAD, *DSLOAD`（解析有，主链路仍在完善）
+**Parsed-Not-Solved（含本轮重点关键字）**
+- `*AMPLITUDE`
+- `*CONTACT CONTROLS`
+- `*CONTACT DAMPING`
+- `*CONTROLS`
+- `*COUPLING`
+- `*DEPVAR`
+- `*DLOAD`
+- `*DSLOAD`
+- `*DYNAMIC`
+- `*EL FILE`
+- `*EXPANSION`
+- `*FILM`
+- `*GENERAL CONTACT`
+- `*KINEMATIC`
+- `*NODE FILE`
+- `*ORIENTATION`
+- `*PLASTIC`
+- `*RADIATION`
+- `*SOLUTION TECHNIQUE`
+- `*SPECIFIC HEAT`
+- `*SURFACE BEHAVIOR`
+- `*USER MATERIAL`
+- `*VISCO`
+
+**语义行为补充（本轮新增）**
+- 对上述 parsed-not-solved 关键字增加上下文一致性检查（如热学步、接触搭配、`USER MATERIAL` 与 `DEPVAR` 搭配、`DLOAD/DSLOAD` 步内使用等）。
+- `*ELEMENT, TYPE=...` 支持实体单元族语义检查（含 C3D4/C3D6/C3D8/C3D8R/C3D10/C3D15/C3D20/C3D20R）。
 
 ---
 

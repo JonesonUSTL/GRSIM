@@ -72,18 +72,32 @@ void run_structural_problem(const std::string& out_dir, int frames) {
 void run_coupled_thermo_structural_problem(const std::string& out_dir, int frames) {
   std::filesystem::create_directories(out_dir + "/results/step_1");
   constexpr int n = 64;
-  auto kuu = build_structural_stiffness_sparse(n);
-  auto ktt = build_thermal_matrix_sparse(n);
-  auto kut = build_coupling_ut(n, 0.05);
-  auto ktu = build_coupling_ut(n, 0.02);
-  auto k = assemble_block_matrix(kuu, kut, ktu, ktt);
+
+  const auto [kuu, kut0, ktu0, ktt] = build_thermo_structural_blocks(
+      n, 1.2e-5, 1.0, 2.1e5, 100.0);
 
   DenseVector rhs(2 * n);
   rhs << build_structural_load(n), build_thermal_rhs(n);
 
-  auto x_schur = solve_block_schur(kuu, kut, ktu, ktt, rhs);
-  auto it = solve_linear_cg(k, rhs, 800);
-  if (x_schur.size() == it.x.size()) it.x = 0.5 * it.x + 0.5 * x_schur;
+  DenseVector x = DenseVector::Zero(2 * n);
+  for (int iter = 0; iter < 6; ++iter) {
+    // 强耦合：热膨胀项随温度场更新，形成一致切线近似
+    const auto t = x.tail(n);
+    const double avg_dt = t.size() > 0 ? t.mean() : 0.0;
+    auto kut = build_thermal_expansion_tangent(n, 2.1e5, 1.2e-5, 1.0 + avg_dt / 300.0);
+    SparseMatrix ktu = kut.transpose();
+
+    auto k = assemble_block_matrix(kuu, kut, ktu, ktt);
+    DenseVector r = rhs - k * x;
+    if (r.norm() < 1e-8) break;
+
+    auto dx_schur = solve_block_schur(kuu, kut, ktu, ktt, r);
+    auto dx_it = solve_linear_cg(k, r, 400).x;
+    DenseVector dx = dx_it;
+    if (dx_schur.size() == dx_it.size()) dx = 0.5 * dx_it + 0.5 * dx_schur;
+    x += dx;
+    if (dx.norm() < 1e-8) break;
+  }
 
   std::vector<double> coords;
   std::vector<double> temp_final;
@@ -93,7 +107,7 @@ void run_coupled_thermo_structural_problem(const std::string& out_dir, int frame
     coords.push_back(static_cast<double>(i));
     coords.push_back(1.0);
     coords.push_back(0.0);
-    temp_final.push_back(it.x(n + i));
+    temp_final.push_back(x(n + i));
   }
 
   std::vector<std::pair<double, std::string>> timeline;

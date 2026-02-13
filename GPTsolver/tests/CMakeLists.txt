@@ -71,3 +71,11 @@ add_test(NAME unit_contact_projection COMMAND test_contact_projection)
 add_executable(test_j2_material unit/test_j2_material.cpp)
 target_link_libraries(test_j2_material PRIVATE gptsolver_core)
 add_test(NAME unit_j2_material COMMAND test_j2_material)
+
+add_executable(test_keyword_behaviors unit/test_keyword_behaviors.cpp)
+target_link_libraries(test_keyword_behaviors PRIVATE gptsolver_core)
+add_test(NAME unit_keyword_behaviors COMMAND test_keyword_behaviors)
+
+add_executable(test_thermo_coupling unit/test_thermo_coupling.cpp)
+target_link_libraries(test_thermo_coupling PRIVATE gptsolver_core)
+add_test(NAME unit_thermo_coupling COMMAND test_thermo_coupling)
