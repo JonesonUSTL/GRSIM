@@ -59,3 +59,7 @@ add_test(NAME unit_official_inp COMMAND test_official_inp)
 add_executable(test_official_contact_inp unit/test_official_contact_inp.cpp)
 target_link_libraries(test_official_contact_inp PRIVATE gptsolver_core)
 add_test(NAME unit_official_contact_inp COMMAND test_official_contact_inp)
+
+add_executable(test_element_types unit/test_element_types.cpp)
+target_link_libraries(test_element_types PRIVATE gptsolver_core)
+add_test(NAME unit_element_types COMMAND test_element_types)

@@ -68,6 +68,7 @@ gptsolver examples --run <name>
 ---
 
 - `check` 会输出 `Parsed-Not-Solved` 与 `Unknown` 统计；可加 `--fail-on-unknown` 让 CI 在未知关键字时失败。
+- 单元 `TYPE` 现在会在 `check` 阶段进行语义检查：已覆盖多种实体单元（如 `C3D10/C3D20R`），未支持类型会给出明确告警。
 
 ## 5. 支持清单（重点）
 
@@ -75,7 +76,7 @@ gptsolver examples --run <name>
 
 | 类别 | 单元 | 状态 |
 |---|---|---|
-| 实体 | C3D8 / C3D8R | 接口/占位 + 求解演示链路 |
+| 实体 | C3D4 / C3D6 / C3D8 / C3D8R / C3D10 / C3D15 / C3D20 / C3D20R | 解析与兼容检查已支持；C3D8/C3D8R 已接入演示求解链路 |
 | 平面 | CPS4 / CPE4 | 接口/占位 + 求解演示链路 |
 | 杆 | T3D2 | 可用于示例模型 |
 | 梁 | beam_placeholder | 占位 |
