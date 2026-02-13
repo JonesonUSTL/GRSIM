@@ -63,3 +63,11 @@ add_test(NAME unit_official_contact_inp COMMAND test_official_contact_inp)
 add_executable(test_element_types unit/test_element_types.cpp)
 target_link_libraries(test_element_types PRIVATE gptsolver_core)
 add_test(NAME unit_element_types COMMAND test_element_types)
+
+add_executable(test_contact_projection unit/test_contact_projection.cpp)
+target_link_libraries(test_contact_projection PRIVATE gptsolver_core)
+add_test(NAME unit_contact_projection COMMAND test_contact_projection)
+
+add_executable(test_j2_material unit/test_j2_material.cpp)
+target_link_libraries(test_j2_material PRIVATE gptsolver_core)
+add_test(NAME unit_j2_material COMMAND test_j2_material)

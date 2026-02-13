@@ -1,4 +1,5 @@
 #pragma once
+#include <array>
 #include <unordered_map>
 #include <utility>
 #include <vector>
@@ -26,6 +27,15 @@ struct BucketKeyHash {
   }
 };
 
+struct FaceProjectionResult {
+  std::array<double, 3> projected{};
+  std::array<double, 4> N{};  // quad bilinear shape functions
+  std::array<double, 3> normal{0.0, 0.0, 1.0};
+  std::array<double, 2> uv{0.0, 0.0};
+  double gap{0.0};
+  bool inside{false};
+};
+
 /**
  * @brief 判断两个包围盒是否相交。
  */
@@ -43,5 +53,16 @@ std::vector<std::pair<int, int>> build_contact_candidates(const std::vector<Surf
 std::vector<std::pair<int, int>> build_contact_candidates_bucket(const std::vector<SurfaceBBox>& master,
                                                                  const std::vector<SurfaceBBox>& slave,
                                                                  double cell);
+
+/**
+ * @brief 面-面接触中的点到四边形面的局部投影（平面近似 + 双线性形函数）。
+ */
+FaceProjectionResult project_point_to_quad_face(const std::array<double, 3>& p,
+                                                const std::array<std::array<double, 3>, 4>& face_nodes);
+
+/**
+ * @brief 一致切线近似（法向 penalty）: dfn/dgap
+ */
+inline double normal_contact_tangent(double penalty) { return penalty > 0.0 ? penalty : 0.0; }
 
 }  // namespace gptsolver

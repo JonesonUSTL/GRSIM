@@ -12,14 +12,14 @@ const std::set<std::string>& exec_set() {
       "MATERIAL",     "ELASTIC",      "DENSITY",    "CONDUCTIVITY","STEP",         "STATIC",
       "HEAT TRANSFER", "END STEP",    "BOUNDARY",   "CLOAD",      "TEMPERATURE",   "SURFACE",
       "CONTACT PAIR", "SURFACE INTERACTION", "FRICTION", "MPC", "INCLUDE", "RESTART",
-      "OUTPUT",       "NODE OUTPUT",  "ELEMENT OUTPUT"};
+      "OUTPUT",       "NODE OUTPUT",  "ELEMENT OUTPUT", "SHELL SECTION", "SECTION CONTROLS"};
   return exec;
 }
 const std::set<std::string>& parsed_set() {
   static const std::set<std::string> parsed = {
       "PLASTIC", "USER MATERIAL", "DEPVAR", "DLOAD", "DSLOAD", "COUPLING", "KINEMATIC", "AMPLITUDE",
       "CONTROLS", "SOLUTION TECHNIQUE", "CONTACT CONTROLS", "GENERAL CONTACT", "SURFACE BEHAVIOR",
-      "FILM", "RADIATION", "ORIENTATION", "EXPANSION", "SPECIFIC HEAT", "EL FILE", "NODE FILE"};
+      "FILM", "RADIATION", "ORIENTATION", "EXPANSION", "SPECIFIC HEAT", "EL FILE", "NODE FILE", "DYNAMIC", "VISCO", "CONTACT DAMPING"};
   return parsed;
 }
 }  // namespace

@@ -80,7 +80,7 @@ gptsolver examples --run <name>
 | 平面 | CPS4 / CPE4 | 接口/占位 + 求解演示链路 |
 | 杆 | T3D2 | 可用于示例模型 |
 | 梁 | beam_placeholder | 占位 |
-| 壳 | shell_placeholder | 已提供积分点策略与 hourglass 稳定项占位 |
+| 壳 | shell_placeholder | 已提供 1x1/2x2 积分规则 + hourglass 稳定系数估算（演示版） |
 
 ### 5.2 算法支持现状
 
@@ -89,9 +89,10 @@ gptsolver examples --run <name>
 | 线性求解 | Sparse LDLT | 已实现 |
 | 迭代求解 | CG + 分块 Schur 近似 | 已实现 |
 | 非线性 | Newton + 弧长法 | 已实现（演示级） |
+| 材料 | J2 返回映射（径向回归）+ 线性各向同性硬化 + 多材料库 | 已实现（演示级） |
 | 线搜索 | Backtracking | 已实现 |
 | 增量控制 | cutback + radius 自适应 | 已实现 |
-| 接触 | 法向 penalty + 切向摩擦限幅 + bbox/网格桶候选搜索 | 已实现（演示级） |
+| 接触 | 法向 penalty + 切向摩擦限幅 + bbox/网格桶候选搜索 + 面-面投影（quad 点投影）+ 法向一致切线近似 | 已实现（演示级） |
 | 约束 | MPC/Lagrange（penalty 近似） | 已实现 |
 | 耦合 | 结构-热分块组装与联立求解 | 已实现 |
 | 并行 | OpenMP 装配并行 | 已实现 |

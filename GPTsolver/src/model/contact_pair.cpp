@@ -23,7 +23,25 @@ std::vector<std::pair<int, int>> build_contact_candidates(const std::vector<Surf
 
 namespace {
 int id(double v, double c) { return static_cast<int>(std::floor(v / c)); }
+
+std::array<double, 3> sub3(const std::array<double, 3>& a, const std::array<double, 3>& b) {
+  return {a[0] - b[0], a[1] - b[1], a[2] - b[2]};
 }
+
+std::array<double, 3> add3(const std::array<double, 3>& a, const std::array<double, 3>& b) {
+  return {a[0] + b[0], a[1] + b[1], a[2] + b[2]};
+}
+
+std::array<double, 3> mul3(const std::array<double, 3>& a, double s) { return {a[0] * s, a[1] * s, a[2] * s}; }
+
+double dot3(const std::array<double, 3>& a, const std::array<double, 3>& b) { return a[0] * b[0] + a[1] * b[1] + a[2] * b[2]; }
+
+std::array<double, 3> cross3(const std::array<double, 3>& a, const std::array<double, 3>& b) {
+  return {a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]};
+}
+
+double norm3(const std::array<double, 3>& a) { return std::sqrt(dot3(a, a)); }
+}  // namespace
 
 std::vector<std::pair<int, int>> build_contact_candidates_bucket(const std::vector<SurfaceBBox>& master,
                                                                  const std::vector<SurfaceBBox>& slave,
@@ -52,6 +70,52 @@ std::vector<std::pair<int, int>> build_contact_candidates_bucket(const std::vect
     }
   }
   return {uniq.begin(), uniq.end()};
+}
+
+FaceProjectionResult project_point_to_quad_face(const std::array<double, 3>& p,
+                                                const std::array<std::array<double, 3>, 4>& face_nodes) {
+  FaceProjectionResult r;
+  const auto& x1 = face_nodes[0];
+  const auto& x2 = face_nodes[1];
+  const auto& x4 = face_nodes[3];
+
+  const auto t1 = sub3(x2, x1);
+  const auto t2 = sub3(x4, x1);
+  auto n = cross3(t1, t2);
+  const double nn = norm3(n);
+  if (nn < 1e-14) return r;
+  n = mul3(n, 1.0 / nn);
+
+  const auto xp = sub3(p, x1);
+  const double gap = dot3(xp, n);
+  const auto proj = sub3(p, mul3(n, gap));
+
+  const auto dp = sub3(proj, x1);
+  const double a11 = dot3(t1, t1);
+  const double a12 = dot3(t1, t2);
+  const double a22 = dot3(t2, t2);
+  const double b1 = dot3(dp, t1);
+  const double b2 = dot3(dp, t2);
+  const double det = a11 * a22 - a12 * a12;
+  if (std::abs(det) < 1e-16) return r;
+
+  const double u = (a22 * b1 - a12 * b2) / det;
+  const double v = (-a12 * b1 + a11 * b2) / det;
+
+  const double xi = 2.0 * u - 1.0;
+  const double eta = 2.0 * v - 1.0;
+  r.N = {0.25 * (1 - xi) * (1 - eta), 0.25 * (1 + xi) * (1 - eta), 0.25 * (1 + xi) * (1 + eta),
+         0.25 * (1 - xi) * (1 + eta)};
+
+  std::array<double, 3> recon{0, 0, 0};
+  for (int i = 0; i < 4; ++i) recon = add3(recon, mul3(face_nodes[i], r.N[i]));
+
+  r.projected = recon;
+  r.normal = n;
+  r.uv = {u, v};
+  r.gap = gap;
+  r.inside = (u >= -1e-8 && u <= 1.0 + 1e-8 && v >= -1e-8 && v <= 1.0 + 1e-8);
+  return r;
 }
 
 }  // namespace gptsolver
