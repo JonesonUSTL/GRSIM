@@ -175,7 +175,7 @@ gptsolver examples --run <name>
 
 ## 8. 文档导航
 
-- `docs/ALL_DOCS.md`（已合并全部原分散文档，降低文件数量与维护成本）
+- `docs/ALL_DOCS.md`（统一总文档，内含：用户手册 + 开发文档附录A + 理论手册附录B）
 
 ---
 

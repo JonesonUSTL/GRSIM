@@ -118,4 +118,31 @@ FaceProjectionResult project_point_to_quad_face(const std::array<double, 3>& p,
   return r;
 }
 
+
+std::vector<FaceContactState> build_face_contact_states(
+    const std::vector<std::pair<int, int>>& candidates,
+    const std::vector<std::array<std::array<double, 3>, 4>>& master_faces,
+    const std::vector<std::array<double, 3>>& slave_points,
+    const std::vector<std::pair<int, int>>& dof_pairs) {
+  std::vector<FaceContactState> states;
+  for (const auto& c : candidates) {
+    const int mi = c.first;
+    const int si = c.second;
+    if (mi < 0 || si < 0 || mi >= static_cast<int>(master_faces.size()) || si >= static_cast<int>(slave_points.size()) ||
+        si >= static_cast<int>(dof_pairs.size())) {
+      continue;
+    }
+
+    auto proj = project_point_to_quad_face(slave_points[si], master_faces[mi]);
+    if (!proj.inside) continue;
+
+    FaceContactState st;
+    st.master_node_dof = dof_pairs[si].first;
+    st.slave_node_dof = dof_pairs[si].second;
+    st.projection = proj;
+    states.push_back(st);
+  }
+  return states;
+}
+
 }  // namespace gptsolver

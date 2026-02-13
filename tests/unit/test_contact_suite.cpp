@@ -39,6 +39,21 @@ int main() {
     assert(r->gap > 0.49 && r->gap < 0.51);
   }
 
+
+  {
+    const std::vector<std::pair<int, int>> cand = {{0, 0}};
+    const std::vector<std::array<std::array<double, 3>, 4>> master_faces = {
+        {{{0.0, 0.0, 0.0}, {1.0, 0.0, 0.0}, {1.0, 1.0, 0.0}, {0.0, 1.0, 0.0}}}};
+    const std::vector<std::array<double, 3>> slave_points = {{{0.4, 0.6, -0.1}}};
+    const std::vector<std::pair<int, int>> dof_pairs = {{3, 4}};
+
+    auto states = gptsolver::build_face_contact_states(cand, master_faces, slave_points, dof_pairs);
+    assert(states.size() == 1);
+    auto cp = states[0].to_point_state(0.001);
+    assert(cp.stick);
+    assert(cp.dof_n == 3 && cp.dof_t == 4);
+  }
+
   {
     const std::array<std::array<double, 3>, 4> face = {{{0, 0, 0}, {1, 0, 0}, {1, 1, 0}, {0, 1, 0}}};
     const std::array<double, 3> p = {0.25, 0.75, 0.2};

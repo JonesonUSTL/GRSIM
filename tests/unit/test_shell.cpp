@@ -15,6 +15,12 @@ int main() {
   const auto full = gptsolver::shell_integration_rule(false);
   assert(full.points.size() == 4 && full.weights.size() == 4);
 
+  const auto c3d8r = gptsolver::solid_c3d8_integration_rule(true);
+  assert(c3d8r.points.size() == 1 && c3d8r.weights.size() == 1);
+
+  const auto c3d8f = gptsolver::solid_c3d8_integration_rule(false);
+  assert(c3d8f.points.size() == 8 && c3d8f.weights.size() == 8);
+
   const double khg_solid = gptsolver::solid_hourglass_scale(0.125, 8.0e4);
   assert(khg_solid > 0.0);
   return 0;

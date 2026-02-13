@@ -11,7 +11,9 @@
 #include "gptsolver/io/restart/checkpoint.hpp"
 #include "gptsolver/io/vtk/pvd_writer.hpp"
 #include "gptsolver/io/vtk/vtu_writer.hpp"
+#include "gptsolver/fem/element/shell_placeholder.hpp"
 #include "gptsolver/model/interaction/surface.hpp"
+#include "gptsolver/model/interaction/contact_pair.hpp"
 #include "gptsolver/solver/linear/eigen_iterative.hpp"
 #include "gptsolver/solver/linear/schur_preconditioner.hpp"
 #include "gptsolver/solver/nonlinear/newton_solver.hpp"
@@ -34,12 +36,36 @@ void run_structural_problem(const std::string& out_dir, int frames) {
   k += assemble_mpc_lagrange(ndof, 0, 1, 1.0);
 
   DenseVector rt = DenseVector::Zero(ndof);
-  std::vector<ContactPointState> cps = {{20, 21, -1e-3, 5e-4, 0.0, true}};
+
+  // 接触窄相：从“面候选+从点”构造接触状态，再映射为装配输入。
+  std::vector<ContactPointState> cps;
+  const std::vector<SurfaceBBox> master_bbox = {{0.0, 1.0, 0.0, 1.0, -1e-6, 1e-6}};
+  const std::vector<SurfaceBBox> slave_bbox = {{0.2, 0.3, 0.2, 0.3, -2e-3, -5e-4}};
+  const auto cand = build_contact_candidates_bucket(master_bbox, slave_bbox, 0.5);
+  const std::vector<std::array<std::array<double, 3>, 4>> master_faces = {
+      {{{0.0, 0.0, 0.0}, {1.0, 0.0, 0.0}, {1.0, 1.0, 0.0}, {0.0, 1.0, 0.0}}}};
+  const std::vector<std::array<double, 3>> slave_points = {{{0.25, 0.25, -1e-3}}};
+  const std::vector<std::pair<int, int>> dof_pairs = {{20, 21}};
+  auto face_states = build_face_contact_states(cand, master_faces, slave_points, dof_pairs);
+  for (const auto& fs : face_states) cps.push_back(fs.to_point_state(5e-4));
+
+  // 兼容旧的三角面投影链路，便于和既有最小示例对比。
   TriangleFace tri{{0, 0, 0}, {1, 0, 0}, {0, 1, 0}};
   auto prj = project_point_to_face({0.2, 0.2, -1e-3}, tri);
-  if (prj && prj->inside) cps[0].normal_gap = prj->gap;
+  if (prj && prj->inside) cps.push_back({22, 23, prj->gap, 2e-4, 0.0, true});
+
   assemble_contact_terms(cps, ContactParams{}, k, rt);
   f += rt;
+
+  // 壳/实体积分规则与 hourglass 稳定项（演示版）进入主流程：
+  // 让后续替换真实单元积分时，不需要改 CLI 或 step 主循环。
+  const auto shell_rule = shell_integration_rule(false);
+  const auto solid_rule = solid_c3d8_integration_rule(false);
+  const double k_hg_shell = shell_hourglass_stiffness(0.01, 8.0e4, 1.0);
+  const double k_hg_solid = solid_hourglass_scale(1.0, 8.0e4);
+  if (!shell_rule.weights.empty() && !solid_rule.weights.empty()) {
+    k.coeffRef(0, 0) += 1e-6 * (k_hg_shell + k_hg_solid);
+  }
 
   ArcLengthOptions opt;
   opt.max_iter = 25;

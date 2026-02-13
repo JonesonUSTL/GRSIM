@@ -4,6 +4,8 @@
 #include <utility>
 #include <vector>
 
+#include "gptsolver/assembly/assembler_contact_placeholder.hpp"
+
 namespace gptsolver {
 
 /**
@@ -37,6 +39,18 @@ struct FaceProjectionResult {
 };
 
 /**
+ * @brief 面-面投影生成的接触状态（用于装配层输入）。
+ */
+struct FaceContactState {
+  int master_node_dof{0};
+  int slave_node_dof{1};
+  FaceProjectionResult projection;
+  ContactPointState to_point_state(double tangential_slip = 0.0) const {
+    return ContactPointState{master_node_dof, slave_node_dof, projection.gap, tangential_slip, 0.0, projection.inside};
+  }
+};
+
+/**
  * @brief 判断两个包围盒是否相交。
  */
 bool bbox_overlap(const SurfaceBBox& a, const SurfaceBBox& b);
@@ -59,6 +73,15 @@ std::vector<std::pair<int, int>> build_contact_candidates_bucket(const std::vect
  */
 FaceProjectionResult project_point_to_quad_face(const std::array<double, 3>& p,
                                                 const std::array<std::array<double, 3>, 4>& face_nodes);
+
+/**
+ * @brief 从一组候选面和从面代表点中构造接触状态。
+ */
+std::vector<FaceContactState> build_face_contact_states(
+    const std::vector<std::pair<int, int>>& candidates,
+    const std::vector<std::array<std::array<double, 3>, 4>>& master_faces,
+    const std::vector<std::array<double, 3>>& slave_points,
+    const std::vector<std::pair<int, int>>& dof_pairs);
 
 /**
  * @brief 一致切线近似（法向 penalty）: dfn/dgap

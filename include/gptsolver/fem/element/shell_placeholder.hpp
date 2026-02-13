@@ -13,6 +13,14 @@ struct ShellIntegrationRule {
 };
 
 /**
+ * @brief 实体单元积分配置（演示版，支持 C3D8 full/reduced）。
+ */
+struct SolidIntegrationRule {
+  std::vector<std::array<double, 3>> points;  // (xi, eta, zeta)
+  std::vector<double> weights;
+};
+
+/**
  * @brief 壳单元 hourglass 稳定项计算。
  */
 double shell_hourglass_stiffness(double thickness, double shear_modulus, double area);
@@ -26,6 +34,11 @@ int shell_integration_points(bool reduced);
  * @brief 获取壳单元二维高斯积分规则。
  */
 ShellIntegrationRule shell_integration_rule(bool reduced);
+
+/**
+ * @brief 获取 C3D8 实体单元积分规则（reduced: 1 点；full: 2x2x2）。
+ */
+SolidIntegrationRule solid_c3d8_integration_rule(bool reduced);
 
 /**
  * @brief 估算实体单元 hourglass 稳定系数（用于 C3D8R/C3D20R 等降阶单元）。
