@@ -1,6 +1,6 @@
 # GPTsolver（Abaqus 对标路线：非线性结构静力 + 热学 + 耦合）
 
-> 这是一个“可运行 + 可扩展”的 C++20 FEM 平台。当前版本强调**工程骨架完整性**与**可持续扩展**，并已具备接触/MPC/弧长法/结构-热耦合的可执行演示链路，并新增接触 bbox 粗搜索与壳 hourglass 稳定项占位。
+> 这是一个“可运行 + 可扩展”的 C++20 FEM 平台。当前版本强调**工程骨架完整性**与**可持续扩展**，并已具备接触/MPC/弧长法/结构-热耦合的可执行演示链路。本轮继续做了“文件与目录瘦身”：移除大量空占位头文件，并合并碎片化单元测试。
 
 ---
 
@@ -79,7 +79,7 @@ gptsolver examples --run <name>
 | 实体 | C3D4 / C3D6 / C3D8 / C3D8R / C3D10 / C3D15 / C3D20 / C3D20R | 解析与兼容检查已支持；C3D8/C3D8R 已接入演示求解链路 |
 | 平面 | CPS4 / CPE4 | 接口/占位 + 求解演示链路 |
 | 杆 | T3D2 | 可用于示例模型 |
-| 梁 | beam_placeholder | 占位 |
+| 梁 | B31/B33（规划） | 规划中 |
 | 壳 | shell_placeholder | 已提供 1x1/2x2 积分规则 + hourglass 稳定系数估算（演示版） |
 
 ### 5.2 算法支持现状
@@ -179,6 +179,19 @@ gptsolver examples --run <name>
 
 ---
 
+
+## 8.1 精简后的核心目录
+
+```text
+apps/                # CLI 入口
+include/gptsolver/   # 仅保留有效接口头文件
+src/                 # 核心实现
+tests/unit/          # 合并后的单元测试
+examples/inp/        # 回归算例
+scripts/             # 双平台构建/部署脚本
+docs/ALL_DOCS.md     # 合并文档
+```
+
 ## 9. 下一步升级建议（本版后）
 
 1. 壳/实体真实积分点与 hourglass 控制（优先）。
@@ -189,18 +202,18 @@ gptsolver examples --run <name>
 
 ## 10. 对标 Abaqus 可继续增加的功能清单
 
-### 9.1 近期（建议优先）
+### 10.1 近期（建议优先）
 1. 接触窄相：面-面投影 + 一致切线 + 粘滑状态历史变量。
 2. 壳单元：S4/S4R 多积分点与 hourglass 全量控制。
 3. 求解器：分块 Schur 预条件器（可配置）与 PETSc/MPI 真后端。
 4. 材料：J2 完整返回映射（各向同性/随动硬化）与温度相关参数。
 
-### 9.2 中期
+### 10.2 中期
 1. 动力学：隐式动力学（HHT/Newmark）与模态分析。
 2. 多物理场：热-结构强耦合、热膨胀一致切线。
 3. 子程序：UMAT/UEL 更完整 ABI 与样例插件。
 
-### 9.3 关键字扩展目标
+### 10.3 关键字扩展目标
 - `*COUPLING, *KINEMATIC, *AMPLITUDE, *CONTROLS, *SOLUTION TECHNIQUE`（本版已解析）
 - 后续：`*CONTACT CONTROLS, *GENERAL CONTACT, *SURFACE BEHAVIOR, *FILM, *RADIATION`
 
