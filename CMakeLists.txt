@@ -58,6 +58,8 @@ endif()
 
 add_executable(gptsolver apps/gptsolver_cli/main.cpp)
 target_link_libraries(gptsolver PRIVATE gptsolver_core)
+add_executable(grsim apps/gptsolver_cli/main.cpp)
+target_link_libraries(grsim PRIVATE gptsolver_core)
 
 set(BUILD_TESTING ON CACHE BOOL "Enable project tests" FORCE)
 include(CTest)

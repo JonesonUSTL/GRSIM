@@ -465,4 +465,4 @@ tests/
 
 
 ## 单案例最简命令
-`./build/default/gptsolver run truss_tension`
+`./build/default/grsim run truss_tension` 或 `./build/default/grsim examples --run truss_tension`

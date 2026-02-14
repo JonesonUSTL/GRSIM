@@ -91,17 +91,17 @@ static std::string resolve_example_to_inp(const std::string& name) {
 int main(int argc, char** argv) {
   if (argc < 2 || std::string(argv[1]) == "--help") {
     std::cout << "grsim 命令:\n"
-              << "  grsim run <model.inp|example_name> [--out <dir>] [--threads N] [--solver-backend eigen|petsc] [--resume chk] [--frames N]\n"
+              << "  grsim run <案例名|model.inp> [--out <dir>] [--frames N]\n"
+              << "  grsim examples --run <name> [--out <dir>] [--frames N]  # 一条命令直接跑\n"
               << "  grsim check <model.inp> [--fail-on-unknown]\n"
               << "  grsim info\n"
               << "  grsim examples --list\n"
-              << "  grsim examples --run <name>\n"
               << "  grsim roadmap\n"
               << "  grsim capabilities\n";
     return 0;
   }
 
-  const std::string cmd = argv[1];
+  std::string cmd = argv[1];
   if (cmd == "info") {
     std::cout << "GRSIM v0.2.0\n默认后端: Eigen 稀疏\n能力: 结构/热/耦合最小链路 + 接触 + MPC + 弧长法(演示)\n";
     return 0;
@@ -132,6 +132,8 @@ int main(int argc, char** argv) {
     for (const auto& n : names) std::cout << n << "\n";
     return 0;
   }
+  int run_arg_start = 3;
+  std::string inp_path;
   if (cmd == "examples" && argc >= 4 && std::string(argv[2]) == "--run") {
     const std::string resolved = resolve_example_to_inp(argv[3]);
     if (resolved.empty()) {
@@ -140,13 +142,14 @@ int main(int argc, char** argv) {
       for (const auto& n : list_example_names()) std::cout << "- " << n << "\n";
       return 1;
     }
-    std::cout << "已解析示例: " << argv[3] << " -> " << resolved << "\n";
-    std::cout << "直接运行: grsim run " << resolved << "\n";
-    return 0;
+    inp_path = resolved;
+    cmd = "run";
+    run_arg_start = 4;
+    std::cout << "已解析示例并直接运行: " << argv[3] << " -> " << inp_path << "\n";
   }
 
-  if (argc < 3) return 1;
-  std::string inp_path = argv[2];
+  if (cmd != "run" && argc < 3) return 1;
+  if (inp_path.empty()) inp_path = argv[2];
   if (cmd == "run" && !fs::exists(inp_path)) {
     const auto resolved = resolve_example_to_inp(inp_path);
     if (!resolved.empty()) inp_path = resolved;
@@ -156,7 +159,7 @@ int main(int argc, char** argv) {
 
   if (cmd == "check") {
     bool fail_on_unknown = false;
-    for (int i = 3; i < argc; ++i) {
+    for (int i = run_arg_start; i < argc; ++i) {
       if (std::string(argv[i]) == "--fail-on-unknown") fail_on_unknown = true;
     }
 
@@ -182,7 +185,7 @@ int main(int argc, char** argv) {
     std::string resume;
     int frames = 10;
     double schur_blend = 0.5;
-    for (int i = 3; i < argc; ++i) {
+    for (int i = run_arg_start; i < argc; ++i) {
       const std::string a = argv[i];
       if (a == "--out" && i + 1 < argc) out = std::string(argv[++i]);
       if (a == "--threads" && i + 1 < argc) threads = std::stoi(argv[++i]);

@@ -287,7 +287,9 @@ docs/ALL_DOCS.md     # 合并文档
 
 ### 最简单单案例运行
 ```bash
-./build/default/gptsolver run truss_tension
+./build/default/grsim run truss_tension
+# 或
+./build/default/grsim examples --run truss_tension
 ```
 
-> `run` 现在支持直接传示例名，不再强制先 `examples --run` 再复制长命令。
+> 现在 `examples --run` 会直接执行，不再只打印提示。
