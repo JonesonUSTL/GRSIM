@@ -158,17 +158,32 @@ gptsolver examples --run <name>
 
 ## 7. 案例与回归
 
-### 7.1 案例详细介绍（建议按顺序）
+### 7.1 案例库（已扩充）
 
-| 案例 | 路径 | 目标能力 | 预期输出 |
+当前已内置 20+ 个示例，覆盖结构/热/耦合/接触/塑性/官方风格解析基线。可通过 `gptsolver examples --list` 查看完整清单。
+
+| 类别 | 案例 | 路径 | 目标能力 |
 |---|---|---|---|
-| 杆拉伸 | `examples/inp/static/truss_tension.inp` | 基础结构静力、位移场输出 | `results/step_1/frame_*.vtu` 中 `U` 场 |
-| 静力条形件 | `examples/inp/static/static_bar.inp` | 线性结构链路、约束+载荷 | 位移 `U`、日志与检查点 |
-| 稳态导热杆 | `examples/inp/heat/heat_rod.inp` | 稳态热方程、温度场输出 | `TEMP` 场与 `results.pvd` |
-| 耦合板 | `examples/inp/static/coupled_plate.inp` | 热-结构强耦合 + 热膨胀一致切线近似 | 多帧温度/位移过程结果 |
-| 接触演示（小） | `examples/inp/contact/contact_demo.inp` | 接触流程打通（候选+装配） | 接触流程日志与帧结果 |
-| 接触演示（120单元） | `examples/inp/contact/contact_demo_120el.inp` | 网格桶候选搜索 + 投影链路 | 多帧结果、兼容报告 |
-| 大网格结构 | `examples/inp/static/large_mesh_120el.inp` | 中等规模结构回归 | 多帧位移结果与性能日志 |
+| 结构基础 | truss_tension | `examples/inp/static/truss_tension.inp` | 杆单元拉伸、位移输出 |
+| 结构基础 | static_bar | `examples/inp/static/static_bar.inp` | 线性静力、约束+载荷 |
+| 结构基础 | cantilever_beam | `examples/inp/static/cantilever_beam.inp` | 悬臂工况 |
+| 结构扩展 | cantilever_tip_moment | `examples/inp/static/cantilever_tip_moment.inp` | 端部复合载荷 |
+| 结构扩展 | shear_patch | `examples/inp/static/shear_patch.inp` | 面内剪切基准 |
+| 热学基础 | heat_rod | `examples/inp/heat/heat_rod.inp` | 稳态导热 |
+| 热学扩展 | heat_flux_plate | `examples/inp/heat/heat_flux_plate.inp` | 热流边界 |
+| 热学扩展 | heat_source_block | `examples/inp/heat/heat_source_block.inp` | 体热源载荷 |
+| 耦合 | coupled_plate | `examples/inp/static/coupled_plate.inp` | 热-结构强耦合 |
+| 耦合 | thermal_expansion_bar | `examples/inp/static/thermal_expansion_bar.inp` | 热膨胀一致切线近似 |
+| 接触 | contact_demo | `examples/inp/contact/contact_demo.inp` | 接触流程最小链路 |
+| 接触 | contact_pair_friction_step | `examples/inp/contact/contact_pair_friction_step.inp` | 摩擦接触参数链路 |
+| 接触规模化 | contact_demo_120el | `examples/inp/contact/contact_demo_120el.inp` | 网格桶搜索+投影 |
+| 塑性 | plastic_demo | `examples/inp/plastic/plastic_demo.inp` | 塑性关键字链路 |
+| 塑性 | j2_uniaxial_cycle | `examples/inp/plastic/j2_uniaxial_cycle.inp` | J2 单轴路径演示 |
+| 官方风格 | official_cantilever_main | `examples/inp/official_like/official_cantilever_main.inp` | PART/ASSEMBLY/INCLUDE |
+| 官方风格 | official_contact_main | `examples/inp/official_like/official_contact_main.inp` | CONTACT 关键字组合 |
+| 官方风格 | official_dynamic_parse_only | `examples/inp/official_like/official_dynamic_parse_only.inp` | DYNAMIC/CONTROLS 解析基线 |
+| 约束 | official_mpc_coupling_main | `examples/inp/official_like/official_mpc_coupling_main.inp` | MPC/COUPLING/KINEMATIC |
+| 大规模演示 | large_mesh_120el | `examples/inp/static/large_mesh_120el.inp` | 中规模回归与日志观察 |
 
 ### 7.2 一键运行方法（帮助文档重点）
 
@@ -180,18 +195,25 @@ gptsolver examples --run <name>
 
 **Windows CMD（已构建）**
 ```bat
-.\scripts\run_demo_windows.bat
-.\scripts\run_regression.bat
+./scripts/run_demo_windows.bat
+./scripts/run_regression.bat
 ```
 
-### 7.3 单案例手工运行（便于调试）
+**只跑指定案例**
+```bash
+gptsolver examples --run heat_flux_plate
+./build/default/gptsolver run examples/inp/heat/heat_flux_plate.inp --out output/demo_heat_flux --frames 10
+```
+
+### 7.3 回归命令（手工分步）
 
 ```bash
-./build/default/gptsolver run examples/inp/static/static_bar.inp --out output/reg
-./build/default/gptsolver run examples/inp/heat/heat_rod.inp --out output/reg
-./build/default/gptsolver run examples/inp/static/coupled_plate.inp --out output/reg
-./build/default/gptsolver run examples/inp/contact/contact_demo_120el.inp --out output/reg
-./build/default/gptsolver run examples/inp/static/large_mesh_120el.inp --out output/reg
+./build/default/gptsolver check examples/inp/contact/contact_demo_120el.inp
+./build/default/gptsolver run examples/inp/static/truss_tension.inp --out output/reg_truss
+./build/default/gptsolver run examples/inp/heat/heat_source_block.inp --out output/reg_heat_source
+./build/default/gptsolver run examples/inp/static/coupled_plate.inp --out output/reg_coupled
+./build/default/gptsolver run examples/inp/contact/contact_pair_friction_step.inp --out output/reg_contact_fric
+./build/default/gptsolver run examples/inp/static/large_mesh_120el.inp --out output/reg_large
 ```
 
 ---
@@ -217,11 +239,21 @@ docs/ALL_DOCS.md     # 合并文档
 
 ## 9. 下一步升级建议（本版后）
 
-1. 壳/实体真实积分点与 hourglass 控制（优先）。
-2. 接触搜索已到网格桶阶段，下一步做面-面投影 + 一致切线。
-3. 稀疏分块预条件器（Schur）+ PETSc/MPI 后端打通。
-4. 更完整的 Abaqus keyword 行为对齐与回归基线。
+> 你提到“这些是不是已经做了”，这里给出**状态化更新**：
 
+- ✅ 已完成并进入可运行链路：
+  1. 壳/实体积分规则演示接口 + hourglass 稳定项估算；
+  2. 接触网格桶候选 + 面投影 + 法向一致切线近似；
+  3. Schur 分块近似求解 + 热-结构强耦合主链；
+  4. 关键字分级与官方风格 inp 回归基线。
+- 🔄 部分完成（当前为演示级，下一版要工程化）：
+  1. S4/S4R、C3D8R 一致线性化积分；
+  2. GENERAL CONTACT / CONTACT CONTROLS 数值主链；
+  3. 完整 J2 硬化族（温度相关、随动硬化）。
+- ⏳ 尚未完成：
+  1. PETSc/MPI 真后端（目前 `--solver-backend petsc` 会回退 Eigen 并告警）。
+
+---
 
 ## 10. 对标 Abaqus 可继续增加的功能清单
 

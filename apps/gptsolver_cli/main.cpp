@@ -114,12 +114,17 @@ int main(int argc, char** argv) {
   }
 
   if (cmd == "roadmap") {
-    std::cout << "Abaqus 对标增量功能清单:\n"
-              << "1) 接触: 面-面投影 + 一致切线 + 粘滑状态\n"
-              << "2) 单元: S4/S4R, C3D8R 多积分点与 hourglass\n"
-              << "3) 材料: 完整 J2 (各向同性/随动硬化)\n"
-              << "4) 求解: PETSc/MPI + Schur 预条件\n"
-              << "5) 关键字: *GENERAL CONTACT *CONTACT CONTROLS *SURFACE BEHAVIOR\n";
+    std::cout << "Abaqus 对标路线状态:\n"
+              << "[已完成/可运行]\n"
+              << "1) 接触候选搜索 + 面投影 + 法向一致切线近似\n"
+              << "2) 壳/实体积分规则演示 + hourglass 稳定项估算\n"
+              << "3) 热-结构强耦合分块组装 + Schur 近似求解\n"
+              << "4) 关键字分级检查与官方风格 inp 回归基线\n"
+              << "\n[下一阶段重点]\n"
+              << "A) PETSc/MPI 真后端（当前仍为回退 Eigen）\n"
+              << "B) S4/S4R 与 C3D8R 一致线性化积分\n"
+              << "C) GENERAL CONTACT 与 CONTACT CONTROLS 数值主链\n"
+              << "D) 完整 J2 硬化族与温度相关参数\n";
     return 0;
   }
   if (cmd == "examples" && argc >= 3 && std::string(argv[2]) == "--list") {
