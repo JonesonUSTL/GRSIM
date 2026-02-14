@@ -55,7 +55,7 @@ ctest --test-dir build/default --output-on-failure
 ## 4. 命令行
 
 ```bash
-gptsolver run <model.inp> --out <dir> [--threads N] [--solver-backend eigen|petsc] [--resume checkpoint.bin] [--frames N]
+gptsolver run <model.inp> --out <dir> [--threads N] [--solver-backend eigen|petsc] [--resume checkpoint.bin] [--frames N] [--schur-blend 0..1]
 gptsolver check <model.inp> [--fail-on-unknown]
 gptsolver info
 gptsolver examples --list
@@ -89,14 +89,14 @@ gptsolver examples --run <name>
 | 线性求解 | Sparse LDLT | 已实现 |
 | 迭代求解 | CG + 分块 Schur 近似 | 已实现 |
 | 非线性 | Newton + 弧长法 | 已实现（演示级） |
-| 材料 | J2 返回映射（径向回归）+ 线性各向同性硬化 + 多材料库 | 已实现（演示级） |
+| 材料 | J2 返回映射（各向同性+随动硬化+温度屈服修正）+ 多材料库 | 已实现（工程化基础） |
 | 线搜索 | Backtracking | 已实现 |
 | 增量控制 | cutback + radius 自适应 | 已实现 |
-| 接触 | 法向 penalty + 切向摩擦限幅 + bbox/网格桶候选搜索 + 面-面投影（quad 点投影）+ 法向一致切线近似 | 已实现（演示级） |
+| 接触 | 法向 penalty + 切向摩擦限幅 + bbox/网格桶候选 + 面-面投影 + 一致切线近似 + 粘滑历史变量 | 已实现（工程化基础） |
 | 约束 | MPC/Lagrange（penalty 近似） | 已实现 |
 | 耦合 | 结构-热分块组装与联立求解 | 已实现 |
 | 并行 | OpenMP 装配并行 | 已实现 |
-| PETSc | 后端接口 | 占位（CLI 会给出回退提示） |
+| PETSc | 线性求解后端（可选） | 已接入（需编译时检测到 PETSc） |
 
 ### 5.3 功能支持现状
 
@@ -106,7 +106,7 @@ gptsolver examples --run <name>
 - [x] VTU/PVD 多文件输出
 - [x] 运行状态面板（TUI）
 - [x] 壳单元多积分点（1x1/2x2 演示）+ hourglass 稳定项系数（演示）
-- [x] J2 径向回归（各向同性硬化，演示）+ 多材料库耦合骨架
+- [x] J2 返回映射（各向同性+随动硬化+温度屈服修正）+ 多材料库耦合骨架
 
 ### 5.4 inp 关键字（当前，Abaqus 对标）
 
@@ -246,12 +246,12 @@ docs/ALL_DOCS.md     # 合并文档
   2. 接触网格桶候选 + 面投影 + 法向一致切线近似；
   3. Schur 分块近似求解 + 热-结构强耦合主链；
   4. 关键字分级与官方风格 inp 回归基线。
-- 🔄 部分完成（当前为演示级，下一版要工程化）：
-  1. S4/S4R、C3D8R 一致线性化积分；
-  2. GENERAL CONTACT / CONTACT CONTROLS 数值主链；
-  3. 完整 J2 硬化族（温度相关、随动硬化）。
+- 🔄 部分完成（当前为工程化基础，下一版继续深化）：
+  1. S4/S4R、C3D8R 一致线性化积分（已接入规则与hourglass控制，待完整单元刚度）；
+  2. GENERAL CONTACT / CONTACT CONTROLS 数值主链（已接入候选/窄相/历史变量，待全局接触控制参数）；
+  3. 完整 J2 工程化（已含各向同性+随动+温度修正，待一致切线与多积分点联动）。
 - ⏳ 尚未完成：
-  1. PETSc/MPI 真后端（目前 `--solver-backend petsc` 会回退 Eigen 并告警）。
+  1. MPI 并行分布式求解主链（PETSc 单机后端已接入，可选启用）。
 
 ---
 

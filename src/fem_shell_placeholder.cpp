@@ -47,10 +47,20 @@ SolidIntegrationRule solid_c3d8_integration_rule(bool reduced) {
   return rule;
 }
 
+ShellIntegrationRule s4_integration_rule(bool reduced) { return shell_integration_rule(reduced); }
+
+SolidIntegrationRule c3d8r_integration_rule(bool reduced) { return solid_c3d8_integration_rule(reduced); }
+
 double solid_hourglass_scale(double volume, double shear_modulus, double alpha) {
   const double v = std::max(volume, 1e-12);
   const double a = std::max(alpha, 0.0);
   return a * shear_modulus * v;
+}
+
+double hourglass_energy(double strain_energy, const HourglassControl& ctrl) {
+  const double e = std::max(strain_energy, 0.0);
+  const double scale = ctrl.enhanced ? 1.5 : 1.0;
+  return scale * ctrl.alpha * e;
 }
 
 }  // namespace gptsolver

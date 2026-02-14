@@ -70,5 +70,21 @@ int main() {
     assert(gptsolver::normal_contact_tangent(1234.0) == 1234.0);
   }
 
+  {
+    const std::array<std::array<double, 3>, 4> master = {{{0,0,0},{1,0,0},{1,1,0},{0,1,0}}};
+    const std::array<std::array<double, 3>, 4> slave = {{{0.2,0.2,-0.1},{0.4,0.2,-0.1},{0.4,0.4,-0.1},{0.2,0.4,-0.1}}};
+    auto pff = gptsolver::project_face_to_face(slave, master);
+    assert(pff.inside);
+
+    std::vector<gptsolver::ContactHistoryState> history(1);
+    const std::vector<std::pair<int,int>> cand = {{0,0}};
+    const std::vector<std::array<std::array<double,3>,4>> masters = {master};
+    const std::vector<std::array<double,3>> slave_pts = {{{0.3,0.3,-0.1}}};
+    const std::vector<std::pair<int,int>> dof = {{1,2}};
+    auto states = gptsolver::build_face_contact_states(cand, masters, slave_pts, dof, &history);
+    assert(!states.empty());
+    assert(history[0].accumulated_slip >= 0.0);
+  }
+
   return 0;
 }

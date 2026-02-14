@@ -119,11 +119,25 @@ FaceProjectionResult project_point_to_quad_face(const std::array<double, 3>& p,
 }
 
 
+
+FaceProjectionResult project_face_to_face(const std::array<std::array<double, 3>, 4>& slave_face,
+                                          const std::array<std::array<double, 3>, 4>& master_face) {
+  std::array<double, 3> center{0.0, 0.0, 0.0};
+  for (const auto& p : slave_face) {
+    center[0] += p[0];
+    center[1] += p[1];
+    center[2] += p[2];
+  }
+  center = mul3(center, 0.25);
+  return project_point_to_quad_face(center, master_face);
+}
+
 std::vector<FaceContactState> build_face_contact_states(
     const std::vector<std::pair<int, int>>& candidates,
     const std::vector<std::array<std::array<double, 3>, 4>>& master_faces,
     const std::vector<std::array<double, 3>>& slave_points,
-    const std::vector<std::pair<int, int>>& dof_pairs) {
+    const std::vector<std::pair<int, int>>& dof_pairs,
+    std::vector<ContactHistoryState>* history) {
   std::vector<FaceContactState> states;
   for (const auto& c : candidates) {
     const int mi = c.first;
@@ -140,6 +154,22 @@ std::vector<FaceContactState> build_face_contact_states(
     st.master_node_dof = dof_pairs[si].first;
     st.slave_node_dof = dof_pairs[si].second;
     st.projection = proj;
+
+    if (history) {
+      if (history->size() <= static_cast<size_t>(si)) history->resize(static_cast<size_t>(si) + 1);
+      auto& hs = (*history)[static_cast<size_t>(si)];
+      const double du = proj.uv[0] - hs.last_u;
+      const double dv = proj.uv[1] - hs.last_v;
+      const double dslip = std::sqrt(du * du + dv * dv);
+      hs.accumulated_slip += dslip;
+      hs.last_u = proj.uv[0];
+      hs.last_v = proj.uv[1];
+      hs.stick = hs.accumulated_slip < 1e-2;
+      st.stick = hs.stick;
+      st.projection.gap = proj.gap;
+      if (!hs.stick) st.projection.gap = std::min(0.0, proj.gap);
+    }
+
     states.push_back(st);
   }
   return states;

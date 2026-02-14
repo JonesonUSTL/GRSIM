@@ -29,3 +29,7 @@ if(GPTSOLVER_ENABLE_OPENMP)
     set(GPTSOLVER_ENABLE_OPENMP OFF CACHE BOOL "Enable OpenMP assembly" FORCE)
   endif()
 endif()
+
+if(GPTSOLVER_ENABLE_PETSC)
+  find_package(PETSc QUIET)
+endif()

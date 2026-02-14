@@ -20,12 +20,16 @@
 
 namespace gptsolver {
 namespace {
+double g_schur_blend = 0.5;
 std::string frame_name(int i) {
   std::ostringstream oss;
   oss << "frame_" << std::setw(4) << std::setfill('0') << i << ".vtu";
   return oss.str();
 }
 }
+
+
+void set_schur_blend_weight(double weight) { g_schur_blend = std::min(1.0, std::max(0.0, weight)); }
 
 void run_structural_problem(const std::string& out_dir, int frames) {
   std::filesystem::create_directories(out_dir + "/results/step_1");
@@ -46,8 +50,13 @@ void run_structural_problem(const std::string& out_dir, int frames) {
       {{{0.0, 0.0, 0.0}, {1.0, 0.0, 0.0}, {1.0, 1.0, 0.0}, {0.0, 1.0, 0.0}}}};
   const std::vector<std::array<double, 3>> slave_points = {{{0.25, 0.25, -1e-3}}};
   const std::vector<std::pair<int, int>> dof_pairs = {{20, 21}};
-  auto face_states = build_face_contact_states(cand, master_faces, slave_points, dof_pairs);
+  std::vector<ContactHistoryState> contact_hist;
+  auto face_states = build_face_contact_states(cand, master_faces, slave_points, dof_pairs, &contact_hist);
   for (const auto& fs : face_states) cps.push_back(fs.to_point_state(5e-4));
+
+  const std::array<std::array<double, 3>, 4> slave_face = {{{0.2, 0.2, -1e-3}, {0.3, 0.2, -1e-3}, {0.3, 0.3, -1e-3}, {0.2, 0.3, -1e-3}}};
+  const auto ff_proj = project_face_to_face(slave_face, master_faces[0]);
+  if (ff_proj.inside) cps.push_back({24, 25, ff_proj.gap, 1e-4, 0.0, true});
 
   // 兼容旧的三角面投影链路，便于和既有最小示例对比。
   TriangleFace tri{{0, 0, 0}, {1, 0, 0}, {0, 1, 0}};
@@ -120,7 +129,7 @@ void run_coupled_thermo_structural_problem(const std::string& out_dir, int frame
     auto dx_schur = solve_block_schur(kuu, kut, ktu, ktt, r);
     auto dx_it = solve_linear_cg(k, r, 400).x;
     DenseVector dx = dx_it;
-    if (dx_schur.size() == dx_it.size()) dx = 0.5 * dx_it + 0.5 * dx_schur;
+    if (dx_schur.size() == dx_it.size()) dx = (1.0 - g_schur_blend) * dx_it + g_schur_blend * dx_schur;
     x += dx;
     if (dx.norm() < 1e-8) break;
   }

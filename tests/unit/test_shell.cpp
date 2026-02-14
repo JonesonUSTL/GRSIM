@@ -21,7 +21,20 @@ int main() {
   const auto c3d8f = gptsolver::solid_c3d8_integration_rule(false);
   assert(c3d8f.points.size() == 8 && c3d8f.weights.size() == 8);
 
+  const auto s4r = gptsolver::s4_integration_rule(true);
+  const auto s4 = gptsolver::s4_integration_rule(false);
+  assert(s4r.points.size() == 1);
+  assert(s4.points.size() == 4);
+
+  const auto c3d8r_alias = gptsolver::c3d8r_integration_rule(true);
+  assert(c3d8r_alias.points.size() == 1);
+
   const double khg_solid = gptsolver::solid_hourglass_scale(0.125, 8.0e4);
   assert(khg_solid > 0.0);
+
+  gptsolver::HourglassControl ctrl;
+  ctrl.alpha = 0.1;
+  ctrl.enhanced = true;
+  assert(gptsolver::hourglass_energy(10.0, ctrl) > 1.0);
   return 0;
 }

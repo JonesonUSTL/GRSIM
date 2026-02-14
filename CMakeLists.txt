@@ -24,6 +24,7 @@ add_library(gptsolver_core
   src/solver/linear/eigen_direct.cpp
   src/solver/linear/eigen_iterative.cpp
   src/solver/linear/schur_preconditioner.cpp
+  src/solver/linear/petsc_backend.cpp
   src/solver/nonlinear/newton_solver.cpp
   src/solver/nonlinear/increment_controller.cpp
   src/solver/nonlinear/line_search.cpp
@@ -44,6 +45,11 @@ apply_project_warnings(gptsolver_core)
 if(GPTSOLVER_ENABLE_OPENMP)
   target_link_libraries(gptsolver_core PUBLIC OpenMP::OpenMP_CXX)
   target_compile_definitions(gptsolver_core PUBLIC GPTSOLVER_USE_OPENMP=1)
+endif()
+if(GPTSOLVER_ENABLE_PETSC AND PETSC_FOUND)
+  target_link_libraries(gptsolver_core PUBLIC ${PETSC_LIBRARIES})
+  target_include_directories(gptsolver_core PUBLIC ${PETSC_INCLUDES})
+  target_compile_definitions(gptsolver_core PUBLIC GPTSOLVER_HAS_PETSC=1)
 endif()
 
 add_executable(gptsolver apps/gptsolver_cli/main.cpp)

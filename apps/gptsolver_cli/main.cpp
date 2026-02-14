@@ -15,6 +15,7 @@
 #include "gptsolver/io/inp/semantic.hpp"
 #include "gptsolver/physics/structural/structural_problem.hpp"
 #include "gptsolver/physics/thermal/thermal_problem.hpp"
+#include "gptsolver/solver/linear/petsc_backend.hpp"
 #include "gptsolver/ui/console_dashboard.hpp"
 
 namespace fs = std::filesystem;
@@ -121,7 +122,7 @@ int main(int argc, char** argv) {
               << "3) 热-结构强耦合分块组装 + Schur 近似求解\n"
               << "4) 关键字分级检查与官方风格 inp 回归基线\n"
               << "\n[下一阶段重点]\n"
-              << "A) PETSc/MPI 真后端（当前仍为回退 Eigen）\n"
+              << "A) PETSc/MPI 分布式并行主链（PETSc 单机后端已可选）\n"
               << "B) S4/S4R 与 C3D8R 一致线性化积分\n"
               << "C) GENERAL CONTACT 与 CONTACT CONTROLS 数值主链\n"
               << "D) 完整 J2 硬化族与温度相关参数\n";
@@ -177,6 +178,7 @@ int main(int argc, char** argv) {
     std::string backend = "eigen";
     std::string resume;
     int frames = 10;
+    double schur_blend = 0.5;
     for (int i = 3; i < argc; ++i) {
       const std::string a = argv[i];
       if (a == "--out" && i + 1 < argc) out = std::string(argv[++i]) + "/run_" + ts();
@@ -184,12 +186,15 @@ int main(int argc, char** argv) {
       if (a == "--solver-backend" && i + 1 < argc) backend = argv[++i];
       if (a == "--resume" && i + 1 < argc) resume = argv[++i];
       if (a == "--frames" && i + 1 < argc) frames = std::max(1, std::stoi(argv[++i]));
+      if (a == "--schur-blend" && i + 1 < argc) schur_blend = std::stod(argv[++i]);
     }
 
     fs::create_directories(out);
+    set_linear_solver_backend(backend);
+    set_schur_blend_weight(schur_blend);
     global_logger().open(out + "/run.log");
     global_logger().info("启动求解, backend=" + backend + ", threads=" + std::to_string(threads));
-    if (backend == "petsc") global_logger().warn("当前 PETSc 为接口占位，将自动回退 Eigen 稀疏求解");
+    if (backend == "petsc") global_logger().info("已请求 PETSc 后端；若当前构建未启用，将在求解器层自动回退 Eigen");
     if (!resume.empty()) global_logger().info("从检查点恢复: " + resume);
     inp::write_compatibility_report(out + "/compatibility_report.md", issues);
 
@@ -214,10 +219,12 @@ int main(int argc, char** argv) {
       run_structural_problem(out, frames);
 
     std::ofstream(out + "/run_manifest.json")
-        << "{\n  \"input\": \"" << inp_path << "\",\n  \"backend\": \"" << backend << "\",\n  \"threads\": " << threads << ",\n  \"frames\": " << frames
-        << "\n}\n";
+        << "{\n  \"input\": \"" << inp_path << "\",\n  \"backend\": \"" << backend
+        << "\",\n  \"threads\": " << threads << ",\n  \"frames\": " << frames
+        << ",\n  \"schur_blend\": " << schur_blend << "\n}\n";
     std::ofstream(out + "/summary.md") << "# 运行简报\n\n- 输入: " << inp_path << "\n- 兼容告警数: " << issues.size()
                                       << "\n- 输出帧数: " << frames
+                                      << "\n- Schur 混合权重: " << schur_blend
                                       << "\n- 下一步建议: 深化接触搜索/壳单元/真实材料积分与稀疏分块预条件器。\n";
     global_logger().info("完成");
     return 0;

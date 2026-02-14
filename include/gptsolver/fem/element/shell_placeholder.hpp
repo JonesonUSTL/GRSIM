@@ -20,6 +20,11 @@ struct SolidIntegrationRule {
   std::vector<double> weights;
 };
 
+struct HourglassControl {
+  double alpha{0.06};
+  bool enhanced{false};
+};
+
 /**
  * @brief 壳单元 hourglass 稳定项计算。
  */
@@ -34,15 +39,18 @@ int shell_integration_points(bool reduced);
  * @brief 获取壳单元二维高斯积分规则。
  */
 ShellIntegrationRule shell_integration_rule(bool reduced);
+ShellIntegrationRule s4_integration_rule(bool reduced);
 
 /**
  * @brief 获取 C3D8 实体单元积分规则（reduced: 1 点；full: 2x2x2）。
  */
 SolidIntegrationRule solid_c3d8_integration_rule(bool reduced);
+SolidIntegrationRule c3d8r_integration_rule(bool reduced);
 
 /**
  * @brief 估算实体单元 hourglass 稳定系数（用于 C3D8R/C3D20R 等降阶单元）。
  */
 double solid_hourglass_scale(double volume, double shear_modulus, double alpha = 0.06);
+double hourglass_energy(double strain_energy, const HourglassControl& ctrl);
 
 }  // namespace gptsolver
