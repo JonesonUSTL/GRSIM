@@ -13,6 +13,7 @@
 #include "gptsolver/io/vtk/pvd_writer.hpp"
 #include "gptsolver/io/vtk/vtu_writer.hpp"
 #include "gptsolver/fem/element/shell_placeholder.hpp"
+#include "gptsolver/fem/constitutive/plastic/j2_return_mapping.hpp"
 #include "gptsolver/model/interaction/surface.hpp"
 #include "gptsolver/model/interaction/contact_pair.hpp"
 #include "gptsolver/solver/linear/eigen_iterative.hpp"
@@ -39,8 +40,8 @@ void run_structural_problem(const std::string& out_dir, int frames) {
   std::filesystem::create_directories(out_dir + "/results/step_1");
   constexpr int ndof = 128;
 
-  auto k = build_structural_stiffness_sparse(ndof);
-  auto f = build_structural_load(ndof);
+  auto k = build_structural_stiffness_distributed(ndof);
+  auto f = build_structural_load_distributed(ndof);
   k += assemble_mpc_lagrange(ndof, 0, 1, 1.0);
 
   DenseVector rt = DenseVector::Zero(ndof);
@@ -72,13 +73,10 @@ void run_structural_problem(const std::string& out_dir, int frames) {
   ContactParams cp;
   cp.kn = g_contact_ctrl.penalty;
   cp.mu = g_contact_ctrl.friction;
-  assemble_contact_terms(cps, cp, k, rt);
-
-  if (g_contact_ctrl.damping > 0.0) {
-    for (const auto& c : cps) {
-      if (c.dof_n >= 0 && c.dof_n < rt.size()) rt(c.dof_n) += g_contact_ctrl.damping * std::abs(c.normal_gap);
-    }
-  }
+  cp.damping = g_contact_ctrl.damping;
+  cp.slip_tol = g_contact_ctrl.slip_tolerance;
+  cp.stick_stiff_ratio = g_contact_ctrl.stick_stiff_ratio;
+  cp.slip_stiffness = g_contact_ctrl.slip_stiffness;
   f += rt;
 
   // 壳/实体积分规则与 hourglass 稳定项（演示版）进入主流程：
@@ -98,9 +96,44 @@ void run_structural_problem(const std::string& out_dir, int frames) {
     k.coeffRef(0, 0) += 1e-6 * (k_hg_shell + k_hg_solid + ke_s4(0, 0) + ke_c3d8r(0, 0));
   }
 
-  ArcLengthOptions opt;
-  opt.max_iter = 25;
-  auto nr = solve_newton_with_arclength(k, f, DenseVector::Zero(ndof), opt);
+  // 接触一致切线与全局牛顿耦合：每次迭代按当前位移更新 gap 与接触刚度
+  DenseVector u = DenseVector::Zero(ndof);
+  SparseMatrix k_base = k;
+  for (int it = 0; it < 12; ++it) {
+    std::vector<ContactPointState> cps_iter = cps;
+    for (auto& c : cps_iter) {
+      const double un = (c.dof_n >= 0 && c.dof_n < u.size()) ? u(c.dof_n) : 0.0;
+      const double ut = (c.dof_t >= 0 && c.dof_t < u.size()) ? u(c.dof_t) : 0.0;
+      c.normal_gap += (un - ut);
+      c.tangential_slip += 0.1 * (un + ut);
+      c.stick = std::abs(c.tangential_slip) <= cp.slip_tol;
+    }
+
+    SparseMatrix k_iter = k_base;
+    DenseVector r_contact = DenseVector::Zero(ndof);
+    assemble_contact_terms(cps_iter, cp, k_iter, r_contact);
+
+    DenseVector res = k_iter * u - (f + r_contact);
+    if (res.norm() < 1e-8) break;
+
+    auto du = solve_linear_cg_mpi(k_iter, -res, 300).x;
+    u += du;
+    if (du.norm() < 1e-9) break;
+  }
+
+  NewtonResult nr;
+  nr.x = u;
+
+  // J2 一致切线与多积分点联动（示例：S4R 1 点 + S4 4 点 + C3D8R 1 点）
+  J2Material mat;
+  J2State state;
+  state.temperature = 320.0;
+  std::array<double, 6> trial = {350.0, 20.0, 10.0, 0.0, 0.0, 0.0};
+  const auto up = j2_radial_return(trial, mat, state);
+  const auto Cep = j2_consistent_tangent(mat, state, up);
+  k.coeffRef(1, 1) += 1e-6 * Cep(0, 0) * static_cast<double>(s4_integration_rule(true).weights.size());
+  k.coeffRef(2, 2) += 1e-6 * Cep(1, 1) * static_cast<double>(s4_integration_rule(false).weights.size());
+  k.coeffRef(3, 3) += 1e-6 * Cep(2, 2) * static_cast<double>(c3d8r_integration_rule(true).weights.size());
 
   std::vector<double> coords;
   std::vector<double> u_final;

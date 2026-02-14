@@ -40,7 +40,7 @@
 
 # 用户手册
 
-`gptsolver run <inp> --out <dir>` 运行算例。`gptsolver check <inp>` 仅检查兼容性。
+`grsim run <inp> --out <dir>` 运行算例。`grsim check <inp>` 仅检查兼容性。
 
 ## 用户手册补充：案例详细介绍与一键运行
 
@@ -55,26 +55,26 @@
 
 | 类别 | 案例名 | 文件路径 | 核心验证点 | 建议命令 |
 |---|---|---|---|---|
-| 结构 | truss_tension | `examples/inp/static/truss_tension.inp` | 杆拉伸位移链路 | `gptsolver run ... --out output/demo_truss` |
-| 结构 | static_bar | `examples/inp/static/static_bar.inp` | 基础静力与输出 | `gptsolver run ... --out output/demo_bar` |
-| 结构 | cantilever_beam | `examples/inp/static/cantilever_beam.inp` | 悬臂边界与集中载荷 | `gptsolver run ... --out output/demo_cantilever` |
-| 结构 | cantilever_tip_moment | `examples/inp/static/cantilever_tip_moment.inp` | 端部复合荷载 | `gptsolver run ... --out output/demo_tip` |
-| 结构 | shear_patch | `examples/inp/static/shear_patch.inp` | 面内剪切基准 | `gptsolver run ... --out output/demo_shear` |
-| 热学 | heat_rod | `examples/inp/heat/heat_rod.inp` | 稳态导热 | `gptsolver run ... --out output/demo_heat` |
-| 热学 | heat_flux_plate | `examples/inp/heat/heat_flux_plate.inp` | 热流边界 | `gptsolver run ... --out output/demo_heat_flux` |
-| 热学 | heat_source_block | `examples/inp/heat/heat_source_block.inp` | 体热源关键字链路 | `gptsolver run ... --out output/demo_heat_source` |
-| 耦合 | coupled_plate | `examples/inp/static/coupled_plate.inp` | 热-结构强耦合 | `gptsolver run ... --out output/demo_coupled --frames 10` |
-| 耦合 | thermal_expansion_bar | `examples/inp/static/thermal_expansion_bar.inp` | 热膨胀一致切线近似 | `gptsolver run ... --out output/demo_thermexp` |
-| 接触 | contact_demo | `examples/inp/contact/contact_demo.inp` | 最小接触对流程 | `gptsolver run ... --out output/demo_contact_small` |
-| 接触 | contact_pair_friction_step | `examples/inp/contact/contact_pair_friction_step.inp` | 摩擦参数路径 | `gptsolver run ... --out output/demo_contact_fric` |
-| 接触 | contact_demo_120el | `examples/inp/contact/contact_demo_120el.inp` | 120 单元接触回归 | `gptsolver run ... --out output/demo_contact` |
-| 塑性 | plastic_demo | `examples/inp/plastic/plastic_demo.inp` | PLASTIC 关键字链路 | `gptsolver run ... --out output/demo_plastic` |
-| 塑性 | j2_uniaxial_cycle | `examples/inp/plastic/j2_uniaxial_cycle.inp` | J2 返回映射演示 | `gptsolver run ... --out output/demo_j2` |
-| 官方风格 | official_cantilever_main | `examples/inp/official_like/official_cantilever_main.inp` | PART/ASSEMBLY/INCLUDE | `gptsolver check ...` |
-| 官方风格 | official_contact_main | `examples/inp/official_like/official_contact_main.inp` | GENERAL CONTACT 解析基线 | `gptsolver check ...` |
-| 官方风格 | official_dynamic_parse_only | `examples/inp/official_like/official_dynamic_parse_only.inp` | DYNAMIC/CONTROLS/SOLUTION TECHNIQUE | `gptsolver check ...` |
-| 官方风格 | official_mpc_coupling_main | `examples/inp/official_like/official_mpc_coupling_main.inp` | MPC/COUPLING/KINEMATIC | `gptsolver check ...` |
-| 性能演示 | large_mesh_120el | `examples/inp/static/large_mesh_120el.inp` | 中规模结构回归 | `gptsolver run ... --out output/demo_large --threads 8` |
+| 结构 | truss_tension | `examples/inp/static/truss_tension.inp` | 杆拉伸位移链路 | `grsim run ... --out output/demo_truss` |
+| 结构 | static_bar | `examples/inp/static/static_bar.inp` | 基础静力与输出 | `grsim run ... --out output/demo_bar` |
+| 结构 | cantilever_beam | `examples/inp/static/cantilever_beam.inp` | 悬臂边界与集中载荷 | `grsim run ... --out output/demo_cantilever` |
+| 结构 | cantilever_tip_moment | `examples/inp/static/cantilever_tip_moment.inp` | 端部复合荷载 | `grsim run ... --out output/demo_tip` |
+| 结构 | shear_patch | `examples/inp/static/shear_patch.inp` | 面内剪切基准 | `grsim run ... --out output/demo_shear` |
+| 热学 | heat_rod | `examples/inp/heat/heat_rod.inp` | 稳态导热 | `grsim run ... --out output/demo_heat` |
+| 热学 | heat_flux_plate | `examples/inp/heat/heat_flux_plate.inp` | 热流边界 | `grsim run ... --out output/demo_heat_flux` |
+| 热学 | heat_source_block | `examples/inp/heat/heat_source_block.inp` | 体热源关键字链路 | `grsim run ... --out output/demo_heat_source` |
+| 耦合 | coupled_plate | `examples/inp/static/coupled_plate.inp` | 热-结构强耦合 | `grsim run ... --out output/demo_coupled --frames 10` |
+| 耦合 | thermal_expansion_bar | `examples/inp/static/thermal_expansion_bar.inp` | 热膨胀一致切线近似 | `grsim run ... --out output/demo_thermexp` |
+| 接触 | contact_demo | `examples/inp/contact/contact_demo.inp` | 最小接触对流程 | `grsim run ... --out output/demo_contact_small` |
+| 接触 | contact_pair_friction_step | `examples/inp/contact/contact_pair_friction_step.inp` | 摩擦参数路径 | `grsim run ... --out output/demo_contact_fric` |
+| 接触 | contact_demo_120el | `examples/inp/contact/contact_demo_120el.inp` | 120 单元接触回归 | `grsim run ... --out output/demo_contact` |
+| 塑性 | plastic_demo | `examples/inp/plastic/plastic_demo.inp` | PLASTIC 关键字链路 | `grsim run ... --out output/demo_plastic` |
+| 塑性 | j2_uniaxial_cycle | `examples/inp/plastic/j2_uniaxial_cycle.inp` | J2 返回映射演示 | `grsim run ... --out output/demo_j2` |
+| 官方风格 | official_cantilever_main | `examples/inp/official_like/official_cantilever_main.inp` | PART/ASSEMBLY/INCLUDE | `grsim check ...` |
+| 官方风格 | official_contact_main | `examples/inp/official_like/official_contact_main.inp` | GENERAL CONTACT 解析基线 | `grsim check ...` |
+| 官方风格 | official_dynamic_parse_only | `examples/inp/official_like/official_dynamic_parse_only.inp` | DYNAMIC/CONTROLS/SOLUTION TECHNIQUE | `grsim check ...` |
+| 官方风格 | official_mpc_coupling_main | `examples/inp/official_like/official_mpc_coupling_main.inp` | MPC/COUPLING/KINEMATIC | `grsim check ...` |
+| 性能演示 | large_mesh_120el | `examples/inp/static/large_mesh_120el.inp` | 中规模结构回归 | `grsim run ... --out output/demo_large --threads 8` |
 
 ### 一键运行方法
 
@@ -93,17 +93,17 @@
 - 若运行 bat，请使用 `./scripts/run_demo_windows.bat` 与 `./scripts/run_regression.bat`。
 
 ### 推荐排障流程
-1. 先 `gptsolver check <case.inp>`，确认无 Unknown 关键字。
-2. 再 `gptsolver run <case.inp> --out output/debug_case --frames 10`。
+1. 先 `grsim check <case.inp>`，确认无 Unknown 关键字。
+2. 再 `grsim run <case.inp> --out output/debug_case --frames 10`。
 3. 检查输出目录下 `compatibility_report.md`、`run.log`、`results/results.pvd`。
 
 ---|---|---|---|
-| 杆拉伸 | `examples/inp/static/truss_tension.inp` | 结构基本位移链路 | `gptsolver run ... --out output/demo_truss` |
-| 条形件静力 | `examples/inp/static/static_bar.inp` | 约束+集中载荷+帧输出 | `gptsolver run ... --out output/demo_bar` |
-| 导热杆 | `examples/inp/heat/heat_rod.inp` | 稳态热传导与温度场 | `gptsolver run ... --out output/demo_heat` |
-| 耦合板 | `examples/inp/static/coupled_plate.inp` | 热-结构耦合与一致切线近似 | `gptsolver run ... --out output/demo_coupled --frames 10` |
-| 接触120单元 | `examples/inp/contact/contact_demo_120el.inp` | 接触候选搜索+投影+装配链 | `gptsolver run ... --out output/demo_contact --frames 10` |
-| 大网格结构 | `examples/inp/static/large_mesh_120el.inp` | 中规模回归与性能观察 | `gptsolver run ... --out output/demo_large --threads 8` |
+| 杆拉伸 | `examples/inp/static/truss_tension.inp` | 结构基本位移链路 | `grsim run ... --out output/demo_truss` |
+| 条形件静力 | `examples/inp/static/static_bar.inp` | 约束+集中载荷+帧输出 | `grsim run ... --out output/demo_bar` |
+| 导热杆 | `examples/inp/heat/heat_rod.inp` | 稳态热传导与温度场 | `grsim run ... --out output/demo_heat` |
+| 耦合板 | `examples/inp/static/coupled_plate.inp` | 热-结构耦合与一致切线近似 | `grsim run ... --out output/demo_coupled --frames 10` |
+| 接触120单元 | `examples/inp/contact/contact_demo_120el.inp` | 接触候选搜索+投影+装配链 | `grsim run ... --out output/demo_contact --frames 10` |
+| 大网格结构 | `examples/inp/static/large_mesh_120el.inp` | 中规模回归与性能观察 | `grsim run ... --out output/demo_large --threads 8` |
 
 ### 一键运行方法
 
@@ -462,3 +462,7 @@ tests/
    VTU 保存场变量，PVD 组织时间序列。
 2. **过程帧输出**：
    稳态也可按 `--frames` 输出过程帧，便于与 Abaqus 过程输出体验对齐。
+
+
+## 单案例最简命令
+`./build/default/gptsolver run truss_tension`

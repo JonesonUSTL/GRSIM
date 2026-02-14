@@ -1,7 +1,10 @@
 #include "gptsolver/fem/constitutive/plastic/j2_return_mapping.hpp"
 
+
 #include <algorithm>
 #include <cmath>
+
+#include <Eigen/Dense>
 
 namespace gptsolver {
 namespace {
@@ -81,6 +84,40 @@ J2UpdateResult j2_radial_return(const std::array<double, 6>& trial_stress, const
   out.sigma_eq = j2_norm(sub6(deviator(out.stress), out.alpha));
   out.yielded = true;
   return out;
+}
+
+
+Eigen::Matrix<double, 6, 6> isotropic_elastic_matrix(double E, double nu) {
+  Eigen::Matrix<double, 6, 6> C = Eigen::Matrix<double, 6, 6>::Zero();
+  const double lmbda = E * nu / ((1.0 + nu) * (1.0 - 2.0 * nu));
+  const double G = E / (2.0 * (1.0 + nu));
+  for (int i = 0; i < 3; ++i) {
+    for (int j = 0; j < 3; ++j) C(i, j) = (i == j) ? (lmbda + 2.0 * G) : lmbda;
+  }
+  C(3, 3) = G;
+  C(4, 4) = G;
+  C(5, 5) = G;
+  return C;
+}
+
+Eigen::Matrix<double, 6, 6> j2_consistent_tangent(const J2Material& mat, const J2State& state,
+                                                  const J2UpdateResult& update) {
+  const auto Ce = isotropic_elastic_matrix(mat.E, mat.nu);
+  if (!update.yielded) return Ce;
+
+  const auto sdev = deviator(update.stress);
+  const auto eta = sub6(sdev, state.alpha);
+  const double nrm = std::max(j2_norm(eta), 1e-12);
+  Eigen::Matrix<double, 6, 1> n;
+  n << eta[0] / nrm, eta[1] / nrm, eta[2] / nrm, eta[3] / nrm, eta[4] / nrm, eta[5] / nrm;
+
+  const double G = mat.E / (2.0 * (1.0 + mat.nu));
+  const double h_kin = (2.0 / 3.0) * mat.C_kin;
+  const double H = mat.H_iso + h_kin;
+  const double denom = std::max(3.0 * G + H, 1e-12);
+
+  Eigen::Matrix<double, 6, 6> Cep = Ce - ((6.0 * G * G) / denom) * (n * n.transpose());
+  return Cep;
 }
 
 }  // namespace gptsolver

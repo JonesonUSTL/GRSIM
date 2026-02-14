@@ -90,20 +90,20 @@ static std::string resolve_example_to_inp(const std::string& name) {
 
 int main(int argc, char** argv) {
   if (argc < 2 || std::string(argv[1]) == "--help") {
-    std::cout << "gptsolver 命令:\n"
-              << "  gptsolver run <model.inp> --out <dir> [--threads N] [--solver-backend eigen|petsc] [--resume chk] [--frames N]\n"
-              << "  gptsolver check <model.inp> [--fail-on-unknown]\n"
-              << "  gptsolver info\n"
-              << "  gptsolver examples --list\n"
-              << "  gptsolver examples --run <name>\n"
-              << "  gptsolver roadmap\n"
-              << "  gptsolver capabilities\n";
+    std::cout << "grsim 命令:\n"
+              << "  grsim run <model.inp|example_name> [--out <dir>] [--threads N] [--solver-backend eigen|petsc] [--resume chk] [--frames N]\n"
+              << "  grsim check <model.inp> [--fail-on-unknown]\n"
+              << "  grsim info\n"
+              << "  grsim examples --list\n"
+              << "  grsim examples --run <name>\n"
+              << "  grsim roadmap\n"
+              << "  grsim capabilities\n";
     return 0;
   }
 
   const std::string cmd = argv[1];
   if (cmd == "info") {
-    std::cout << "GPTsolver v0.2.0\n默认后端: Eigen 稀疏\n能力: 结构/热/耦合最小链路 + 接触 + MPC + 弧长法(演示)\n";
+    std::cout << "GRSIM v0.2.0\n默认后端: Eigen 稀疏\n能力: 结构/热/耦合最小链路 + 接触 + MPC + 弧长法(演示)\n";
     return 0;
   }
   if (cmd == "capabilities") {
@@ -141,12 +141,16 @@ int main(int argc, char** argv) {
       return 1;
     }
     std::cout << "已解析示例: " << argv[3] << " -> " << resolved << "\n";
-    std::cout << "请执行: gptsolver run " << resolved << " --out output/demo\n";
+    std::cout << "直接运行: grsim run " << resolved << "\n";
     return 0;
   }
 
   if (argc < 3) return 1;
-  const std::string inp_path = argv[2];
+  std::string inp_path = argv[2];
+  if (cmd == "run" && !fs::exists(inp_path)) {
+    const auto resolved = resolve_example_to_inp(inp_path);
+    if (!resolved.empty()) inp_path = resolved;
+  }
   auto ast = inp::parse_file(inp_path);
   auto issues = inp::semantic_check(ast);
 
@@ -172,7 +176,7 @@ int main(int argc, char** argv) {
   }
 
   if (cmd == "run") {
-    std::string out = "output/run_" + ts();
+    std::string out = "output/run";
     int threads = 1;
     std::string backend = "eigen";
     std::string resume;
@@ -180,7 +184,7 @@ int main(int argc, char** argv) {
     double schur_blend = 0.5;
     for (int i = 3; i < argc; ++i) {
       const std::string a = argv[i];
-      if (a == "--out" && i + 1 < argc) out = std::string(argv[++i]) + "/run_" + ts();
+      if (a == "--out" && i + 1 < argc) out = std::string(argv[++i]);
       if (a == "--threads" && i + 1 < argc) threads = std::stoi(argv[++i]);
       if (a == "--solver-backend" && i + 1 < argc) backend = argv[++i];
       if (a == "--resume" && i + 1 < argc) resume = argv[++i];
@@ -202,6 +206,10 @@ int main(int argc, char** argv) {
         if (it != b.params.end()) contact_ctrl.damping = std::stod(it->second);
         it = b.params.find("SLIPTOL");
         if (it != b.params.end()) contact_ctrl.slip_tolerance = std::stod(it->second);
+        it = b.params.find("STICKSTIFF");
+        if (it != b.params.end()) contact_ctrl.stick_stiff_ratio = std::stod(it->second);
+        it = b.params.find("SLIPSTIFF");
+        if (it != b.params.end()) contact_ctrl.slip_stiffness = std::stod(it->second);
       }
       if (b.keyword == "FRICTION" && !b.data_lines.empty()) {
         const auto line = b.data_lines.front();

@@ -9,6 +9,8 @@ struct ContactRuntimeControls {
   double friction{0.2};
   double damping{0.0};
   double slip_tolerance{1e-2};
+  double stick_stiff_ratio{0.1};
+  double slip_stiffness{1e-8};
 };
 
 void set_contact_runtime_controls(const ContactRuntimeControls& controls);

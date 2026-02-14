@@ -2,6 +2,8 @@
 
 #include <array>
 
+#include <Eigen/Dense>
+
 namespace gptsolver {
 
 double j2_demo_update(double trial_stress, double yield_stress, double hardening);
@@ -38,5 +40,16 @@ struct J2UpdateResult {
  * @param state 等效塑性应变与背应力状态（将被更新）
  */
 J2UpdateResult j2_radial_return(const std::array<double, 6>& trial_stress, const J2Material& mat, J2State& state);
+
+/**
+ * @brief 基于返回映射状态给出 6x6 一致切线近似（Voigt）。
+ */
+Eigen::Matrix<double, 6, 6> j2_consistent_tangent(const J2Material& mat, const J2State& state,
+                                                  const J2UpdateResult& update);
+
+/**
+ * @brief 线弹性 6x6 矩阵（Voigt）。
+ */
+Eigen::Matrix<double, 6, 6> isotropic_elastic_matrix(double E, double nu);
 
 }  // namespace gptsolver

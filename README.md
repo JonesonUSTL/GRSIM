@@ -1,4 +1,4 @@
-# GPTsolver（Abaqus 对标路线：非线性结构静力 + 热学 + 耦合）
+# GRSIM（Abaqus 对标路线：非线性结构静力 + 热学 + 耦合）
 
 > 这是一个“可运行 + 可扩展”的 C++20 FEM 平台。当前版本强调**工程骨架完整性**与**可持续扩展**，并已具备接触/MPC/弧长法/结构-热耦合的可执行演示链路。本轮继续做了“文件与目录瘦身”：移除大量空占位头文件，并合并碎片化单元测试。
 
@@ -46,8 +46,8 @@ scripts\deploy_windows.bat
 cmake --preset default
 cmake --build --preset default -j 8
 ctest --test-dir build/default --output-on-failure
-./build/default/gptsolver examples --list
-./build/default/gptsolver run examples/inp/static/coupled_plate.inp --out output/demo --threads 8
+./build/default/grsim examples --list
+./build/default/grsim run examples/inp/static/coupled_plate.inp --out output/demo --threads 8
 ```
 
 ---
@@ -55,11 +55,11 @@ ctest --test-dir build/default --output-on-failure
 ## 4. 命令行
 
 ```bash
-gptsolver run <model.inp> --out <dir> [--threads N] [--solver-backend eigen|petsc] [--resume checkpoint.bin] [--frames N] [--schur-blend 0..1]
-gptsolver check <model.inp> [--fail-on-unknown]
-gptsolver info
-gptsolver examples --list
-gptsolver examples --run <name>
+grsim run <model.inp> --out <dir> [--threads N] [--solver-backend eigen|petsc] [--resume checkpoint.bin] [--frames N] [--schur-blend 0..1]
+grsim check <model.inp> [--fail-on-unknown]
+grsim info
+grsim examples --list
+grsim examples --run <name>
 ```
 
 - `examples --list` 现在按 **文件名平铺** 展示（如 `official_cantilever_main`），不再要求带目录前缀。
@@ -160,7 +160,7 @@ gptsolver examples --run <name>
 
 ### 7.1 案例库（已扩充）
 
-当前已内置 20+ 个示例，覆盖结构/热/耦合/接触/塑性/官方风格解析基线。可通过 `gptsolver examples --list` 查看完整清单。
+当前已内置 20+ 个示例，覆盖结构/热/耦合/接触/塑性/官方风格解析基线。可通过 `grsim examples --list` 查看完整清单。
 
 | 类别 | 案例 | 路径 | 目标能力 |
 |---|---|---|---|
@@ -201,19 +201,19 @@ gptsolver examples --run <name>
 
 **只跑指定案例**
 ```bash
-gptsolver examples --run heat_flux_plate
-./build/default/gptsolver run examples/inp/heat/heat_flux_plate.inp --out output/demo_heat_flux --frames 10
+grsim examples --run heat_flux_plate
+./build/default/grsim run examples/inp/heat/heat_flux_plate.inp --out output/demo_heat_flux --frames 10
 ```
 
 ### 7.3 回归命令（手工分步）
 
 ```bash
-./build/default/gptsolver check examples/inp/contact/contact_demo_120el.inp
-./build/default/gptsolver run examples/inp/static/truss_tension.inp --out output/reg_truss
-./build/default/gptsolver run examples/inp/heat/heat_source_block.inp --out output/reg_heat_source
-./build/default/gptsolver run examples/inp/static/coupled_plate.inp --out output/reg_coupled
-./build/default/gptsolver run examples/inp/contact/contact_pair_friction_step.inp --out output/reg_contact_fric
-./build/default/gptsolver run examples/inp/static/large_mesh_120el.inp --out output/reg_large
+./build/default/grsim check examples/inp/contact/contact_demo_120el.inp
+./build/default/grsim run examples/inp/static/truss_tension.inp --out output/reg_truss
+./build/default/grsim run examples/inp/heat/heat_source_block.inp --out output/reg_heat_source
+./build/default/grsim run examples/inp/static/coupled_plate.inp --out output/reg_coupled
+./build/default/grsim run examples/inp/contact/contact_pair_friction_step.inp --out output/reg_contact_fric
+./build/default/grsim run examples/inp/static/large_mesh_120el.inp --out output/reg_large
 ```
 
 ---
@@ -283,3 +283,11 @@ docs/ALL_DOCS.md     # 合并文档
 - *GENERAL CONTACT + *CONTACT CONTROLS 数值主链
 - *FILM/*RADIATION 热边界
 - *EL FILE/*NODE FILE 输出频率与变量子集
+
+
+### 最简单单案例运行
+```bash
+./build/default/gptsolver run truss_tension
+```
+
+> `run` 现在支持直接传示例名，不再强制先 `examples --run` 再复制长命令。
