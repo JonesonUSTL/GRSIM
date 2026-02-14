@@ -42,6 +42,34 @@
 
 `gptsolver run <inp> --out <dir>` 运行算例。`gptsolver check <inp>` 仅检查兼容性。
 
+## 用户手册补充：案例详细介绍与一键运行
+
+### 推荐案例清单（从易到难）
+
+| 案例名 | 文件路径 | 核心验证点 | 建议命令 |
+|---|---|---|---|
+| 杆拉伸 | `examples/inp/static/truss_tension.inp` | 结构基本位移链路 | `gptsolver run ... --out output/demo_truss` |
+| 条形件静力 | `examples/inp/static/static_bar.inp` | 约束+集中载荷+帧输出 | `gptsolver run ... --out output/demo_bar` |
+| 导热杆 | `examples/inp/heat/heat_rod.inp` | 稳态热传导与温度场 | `gptsolver run ... --out output/demo_heat` |
+| 耦合板 | `examples/inp/static/coupled_plate.inp` | 热-结构耦合与一致切线近似 | `gptsolver run ... --out output/demo_coupled --frames 10` |
+| 接触120单元 | `examples/inp/contact/contact_demo_120el.inp` | 接触候选搜索+投影+装配链 | `gptsolver run ... --out output/demo_contact --frames 10` |
+| 大网格结构 | `examples/inp/static/large_mesh_120el.inp` | 中规模回归与性能观察 | `gptsolver run ... --out output/demo_large --threads 8` |
+
+### 一键运行方法
+
+#### macOS/Linux
+1. 完成构建：`./scripts/build_mac.sh`
+2. 运行演示：`./scripts/run_demo_mac.sh`
+3. 运行回归：`./scripts/run_regression.sh`
+
+#### Windows CMD
+1. 完成构建：`scripts\build_windows.bat`
+2. 运行演示：`scripts\run_demo_windows.bat`
+3. 运行回归：`scripts\run_regression.bat`
+
+#### Windows PowerShell
+- 推荐：`./scripts/deploy_windows.ps1`
+- 若运行 bat：使用 `./scripts/run_demo_windows.bat`（不要省略 `./`）
 
 ---
 

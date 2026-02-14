@@ -158,6 +158,34 @@ gptsolver examples --run <name>
 
 ## 7. 案例与回归
 
+### 7.1 案例详细介绍（建议按顺序）
+
+| 案例 | 路径 | 目标能力 | 预期输出 |
+|---|---|---|---|
+| 杆拉伸 | `examples/inp/static/truss_tension.inp` | 基础结构静力、位移场输出 | `results/step_1/frame_*.vtu` 中 `U` 场 |
+| 静力条形件 | `examples/inp/static/static_bar.inp` | 线性结构链路、约束+载荷 | 位移 `U`、日志与检查点 |
+| 稳态导热杆 | `examples/inp/heat/heat_rod.inp` | 稳态热方程、温度场输出 | `TEMP` 场与 `results.pvd` |
+| 耦合板 | `examples/inp/static/coupled_plate.inp` | 热-结构强耦合 + 热膨胀一致切线近似 | 多帧温度/位移过程结果 |
+| 接触演示（小） | `examples/inp/contact/contact_demo.inp` | 接触流程打通（候选+装配） | 接触流程日志与帧结果 |
+| 接触演示（120单元） | `examples/inp/contact/contact_demo_120el.inp` | 网格桶候选搜索 + 投影链路 | 多帧结果、兼容报告 |
+| 大网格结构 | `examples/inp/static/large_mesh_120el.inp` | 中等规模结构回归 | 多帧位移结果与性能日志 |
+
+### 7.2 一键运行方法（帮助文档重点）
+
+**macOS/Linux（已构建）**
+```bash
+./scripts/run_demo_mac.sh
+./scripts/run_regression.sh
+```
+
+**Windows CMD（已构建）**
+```bat
+.\scripts\run_demo_windows.bat
+.\scripts\run_regression.bat
+```
+
+### 7.3 单案例手工运行（便于调试）
+
 ```bash
 ./build/default/gptsolver run examples/inp/static/static_bar.inp --out output/reg
 ./build/default/gptsolver run examples/inp/heat/heat_rod.inp --out output/reg
@@ -165,11 +193,6 @@ gptsolver examples --run <name>
 ./build/default/gptsolver run examples/inp/contact/contact_demo_120el.inp --out output/reg
 ./build/default/gptsolver run examples/inp/static/large_mesh_120el.inp --out output/reg
 ```
-
-新增中等规模案例：
-- `examples/inp/static/large_mesh_120el.inp`
-- `examples/inp/contact/contact_demo_120el.inp`
-- `examples/inp/static/coupled_plate.inp`
 
 ---
 
