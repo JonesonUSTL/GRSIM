@@ -94,7 +94,8 @@ std::vector<FaceContactState> build_face_contact_states(
     const std::vector<std::array<std::array<double, 3>, 4>>& master_faces,
     const std::vector<std::array<double, 3>>& slave_points,
     const std::vector<std::pair<int, int>>& dof_pairs,
-    std::vector<ContactHistoryState>* history = nullptr);
+    std::vector<ContactHistoryState>* history = nullptr,
+    double slip_tolerance = 1e-2);
 
 /**
  * @brief 一致切线近似（法向 penalty）: dfn/dgap

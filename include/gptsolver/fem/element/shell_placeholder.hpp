@@ -2,6 +2,8 @@
 #include <array>
 #include <vector>
 
+#include <Eigen/Dense>
+
 namespace gptsolver {
 
 /**
@@ -52,5 +54,16 @@ SolidIntegrationRule c3d8r_integration_rule(bool reduced);
  */
 double solid_hourglass_scale(double volume, double shear_modulus, double alpha = 0.06);
 double hourglass_energy(double strain_energy, const HourglassControl& ctrl);
+
+/**
+ * @brief S4/S4R 一致线性化积分刚度（局部演示矩阵）。
+ */
+Eigen::MatrixXd s4_consistent_tangent(bool reduced, double E, double nu, double thickness, double area,
+                                      const HourglassControl& ctrl);
+
+/**
+ * @brief C3D8R 一致线性化积分刚度（局部演示矩阵）。
+ */
+Eigen::MatrixXd c3d8r_consistent_tangent(double E, double nu, double volume, const HourglassControl& ctrl);
 
 }  // namespace gptsolver

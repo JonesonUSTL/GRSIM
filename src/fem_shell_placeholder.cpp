@@ -63,4 +63,39 @@ double hourglass_energy(double strain_energy, const HourglassControl& ctrl) {
   return scale * ctrl.alpha * e;
 }
 
+Eigen::MatrixXd s4_consistent_tangent(bool reduced, double E, double nu, double thickness, double area,
+                                      const HourglassControl& ctrl) {
+  constexpr int ndof = 24;  // S4: 4 nodes x 6 dof
+  Eigen::MatrixXd ke = Eigen::MatrixXd::Zero(ndof, ndof);
+  const auto rule = s4_integration_rule(reduced);
+  const double G = E / (2.0 * (1.0 + nu));
+
+  for (double w : rule.weights) {
+    const double k_loc = w * E * thickness * std::max(area, 1e-12) / 4.0;
+    for (int i = 0; i < ndof; ++i) ke(i, i) += k_loc;
+  }
+
+  const double hg = shell_hourglass_stiffness(thickness, G, area);
+  const double hg_e = hourglass_energy(hg, ctrl);
+  for (int i = 0; i < ndof; ++i) ke(i, i) += hg_e;
+  return ke;
+}
+
+Eigen::MatrixXd c3d8r_consistent_tangent(double E, double nu, double volume, const HourglassControl& ctrl) {
+  constexpr int ndof = 24;  // C3D8R: 8 nodes x 3 dof
+  Eigen::MatrixXd ke = Eigen::MatrixXd::Zero(ndof, ndof);
+  const auto rule = c3d8r_integration_rule(true);
+  const double G = E / (2.0 * (1.0 + nu));
+
+  for (double w : rule.weights) {
+    const double k_loc = w * E * std::max(volume, 1e-12) / 8.0;
+    for (int i = 0; i < ndof; ++i) ke(i, i) += k_loc;
+  }
+
+  const double hg = solid_hourglass_scale(volume, G, ctrl.alpha);
+  const double hg_e = hourglass_energy(hg, ctrl);
+  for (int i = 0; i < ndof; ++i) ke(i, i) += hg_e;
+  return ke;
+}
+
 }  // namespace gptsolver

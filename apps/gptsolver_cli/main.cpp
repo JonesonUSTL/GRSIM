@@ -116,16 +116,15 @@ int main(int argc, char** argv) {
 
   if (cmd == "roadmap") {
     std::cout << "Abaqus 对标路线状态:\n"
-              << "[已完成/可运行]\n"
-              << "1) 接触候选搜索 + 面投影 + 法向一致切线近似\n"
-              << "2) 壳/实体积分规则演示 + hourglass 稳定项估算\n"
-              << "3) 热-结构强耦合分块组装 + Schur 近似求解\n"
-              << "4) 关键字分级检查与官方风格 inp 回归基线\n"
+              << "[本轮已完成]\n"
+              << "1) S4/S4R、C3D8R 一致线性化积分（规则+hourglass+一致切线接口）\n"
+              << "2) GENERAL CONTACT / CONTACT CONTROLS 数值主链（候选/窄相/历史变量/控制参数）\n"
+              << "3) J2 完整工程化基础（各向同性+随动+温度修正）\n"
+              << "4) PETSc 可选后端 + Schur 可配置混合权重\n"
               << "\n[下一阶段重点]\n"
-              << "A) PETSc/MPI 分布式并行主链（PETSc 单机后端已可选）\n"
-              << "B) S4/S4R 与 C3D8R 一致线性化积分\n"
-              << "C) GENERAL CONTACT 与 CONTACT CONTROLS 数值主链\n"
-              << "D) 完整 J2 硬化族与温度相关参数\n";
+              << "A) MPI 分布式网格装配与并行 KSP 规模化\n"
+              << "B) 接触一致切线与全局牛顿耦合（含 CONTACT CONTROLS 全参数）\n"
+              << "C) J2 一致切线与多积分点联动\n";
     return 0;
   }
   if (cmd == "examples" && argc >= 3 && std::string(argv[2]) == "--list") {
@@ -192,6 +191,29 @@ int main(int argc, char** argv) {
     fs::create_directories(out);
     set_linear_solver_backend(backend);
     set_schur_blend_weight(schur_blend);
+
+    ContactRuntimeControls contact_ctrl;
+    for (const auto& b : ast.blocks) {
+      if (b.keyword == "GENERAL CONTACT") contact_ctrl.enable_general_contact = true;
+      if (b.keyword == "CONTACT CONTROLS") {
+        auto it = b.params.find("PENALTY");
+        if (it != b.params.end()) contact_ctrl.penalty = std::stod(it->second);
+        it = b.params.find("DAMPING");
+        if (it != b.params.end()) contact_ctrl.damping = std::stod(it->second);
+        it = b.params.find("SLIPTOL");
+        if (it != b.params.end()) contact_ctrl.slip_tolerance = std::stod(it->second);
+      }
+      if (b.keyword == "FRICTION" && !b.data_lines.empty()) {
+        const auto line = b.data_lines.front();
+        auto comma = line.find(',');
+        const auto v = (comma == std::string::npos) ? line : line.substr(0, comma);
+        try {
+          contact_ctrl.friction = std::stod(v);
+        } catch (...) {
+        }
+      }
+    }
+    set_contact_runtime_controls(contact_ctrl);
     global_logger().open(out + "/run.log");
     global_logger().info("启动求解, backend=" + backend + ", threads=" + std::to_string(threads));
     if (backend == "petsc") global_logger().info("已请求 PETSc 后端；若当前构建未启用，将在求解器层自动回退 Eigen");

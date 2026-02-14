@@ -1,5 +1,6 @@
 #include "gptsolver/model/interaction/contact_pair.hpp"
 
+#include <algorithm>
 #include <cmath>
 #include <set>
 
@@ -137,7 +138,8 @@ std::vector<FaceContactState> build_face_contact_states(
     const std::vector<std::array<std::array<double, 3>, 4>>& master_faces,
     const std::vector<std::array<double, 3>>& slave_points,
     const std::vector<std::pair<int, int>>& dof_pairs,
-    std::vector<ContactHistoryState>* history) {
+    std::vector<ContactHistoryState>* history,
+    double slip_tolerance) {
   std::vector<FaceContactState> states;
   for (const auto& c : candidates) {
     const int mi = c.first;
@@ -164,7 +166,7 @@ std::vector<FaceContactState> build_face_contact_states(
       hs.accumulated_slip += dslip;
       hs.last_u = proj.uv[0];
       hs.last_v = proj.uv[1];
-      hs.stick = hs.accumulated_slip < 1e-2;
+      hs.stick = hs.accumulated_slip < std::max(1e-8, slip_tolerance);
       st.stick = hs.stick;
       st.projection.gap = proj.gap;
       if (!hs.stick) st.projection.gap = std::min(0.0, proj.gap);

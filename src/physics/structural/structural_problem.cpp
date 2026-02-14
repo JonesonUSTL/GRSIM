@@ -1,5 +1,6 @@
 #include "gptsolver/physics/structural/structural_problem.hpp"
 
+#include <cmath>
 #include <filesystem>
 #include <iomanip>
 #include <sstream>
@@ -21,6 +22,7 @@
 namespace gptsolver {
 namespace {
 double g_schur_blend = 0.5;
+ContactRuntimeControls g_contact_ctrl;
 std::string frame_name(int i) {
   std::ostringstream oss;
   oss << "frame_" << std::setw(4) << std::setfill('0') << i << ".vtu";
@@ -28,6 +30,8 @@ std::string frame_name(int i) {
 }
 }
 
+
+void set_contact_runtime_controls(const ContactRuntimeControls& controls) { g_contact_ctrl = controls; }
 
 void set_schur_blend_weight(double weight) { g_schur_blend = std::min(1.0, std::max(0.0, weight)); }
 
@@ -51,29 +55,47 @@ void run_structural_problem(const std::string& out_dir, int frames) {
   const std::vector<std::array<double, 3>> slave_points = {{{0.25, 0.25, -1e-3}}};
   const std::vector<std::pair<int, int>> dof_pairs = {{20, 21}};
   std::vector<ContactHistoryState> contact_hist;
-  auto face_states = build_face_contact_states(cand, master_faces, slave_points, dof_pairs, &contact_hist);
+  auto face_states = build_face_contact_states(cand, master_faces, slave_points, dof_pairs, &contact_hist, g_contact_ctrl.slip_tolerance);
   for (const auto& fs : face_states) cps.push_back(fs.to_point_state(5e-4));
 
   const std::array<std::array<double, 3>, 4> slave_face = {{{0.2, 0.2, -1e-3}, {0.3, 0.2, -1e-3}, {0.3, 0.3, -1e-3}, {0.2, 0.3, -1e-3}}};
-  const auto ff_proj = project_face_to_face(slave_face, master_faces[0]);
-  if (ff_proj.inside) cps.push_back({24, 25, ff_proj.gap, 1e-4, 0.0, true});
+  if (g_contact_ctrl.enable_general_contact) {
+    const auto ff_proj = project_face_to_face(slave_face, master_faces[0]);
+    if (ff_proj.inside) cps.push_back({24, 25, ff_proj.gap, 1e-4, 0.0, true});
+  }
 
   // 兼容旧的三角面投影链路，便于和既有最小示例对比。
   TriangleFace tri{{0, 0, 0}, {1, 0, 0}, {0, 1, 0}};
   auto prj = project_point_to_face({0.2, 0.2, -1e-3}, tri);
   if (prj && prj->inside) cps.push_back({22, 23, prj->gap, 2e-4, 0.0, true});
 
-  assemble_contact_terms(cps, ContactParams{}, k, rt);
+  ContactParams cp;
+  cp.kn = g_contact_ctrl.penalty;
+  cp.mu = g_contact_ctrl.friction;
+  assemble_contact_terms(cps, cp, k, rt);
+
+  if (g_contact_ctrl.damping > 0.0) {
+    for (const auto& c : cps) {
+      if (c.dof_n >= 0 && c.dof_n < rt.size()) rt(c.dof_n) += g_contact_ctrl.damping * std::abs(c.normal_gap);
+    }
+  }
   f += rt;
 
   // 壳/实体积分规则与 hourglass 稳定项（演示版）进入主流程：
   // 让后续替换真实单元积分时，不需要改 CLI 或 step 主循环。
-  const auto shell_rule = shell_integration_rule(false);
-  const auto solid_rule = solid_c3d8_integration_rule(false);
+  HourglassControl hg_ctrl;
+  hg_ctrl.alpha = 0.08;
+  hg_ctrl.enhanced = true;
+
+  const auto shell_rule = s4_integration_rule(false);
+  const auto solid_rule = c3d8r_integration_rule(true);
+  const auto ke_s4 = s4_consistent_tangent(false, 2.1e5, 0.3, 0.01, 1.0, hg_ctrl);
+  const auto ke_c3d8r = c3d8r_consistent_tangent(2.1e5, 0.3, 1.0, hg_ctrl);
+
   const double k_hg_shell = shell_hourglass_stiffness(0.01, 8.0e4, 1.0);
   const double k_hg_solid = solid_hourglass_scale(1.0, 8.0e4);
   if (!shell_rule.weights.empty() && !solid_rule.weights.empty()) {
-    k.coeffRef(0, 0) += 1e-6 * (k_hg_shell + k_hg_solid);
+    k.coeffRef(0, 0) += 1e-6 * (k_hg_shell + k_hg_solid + ke_s4(0, 0) + ke_c3d8r(0, 0));
   }
 
   ArcLengthOptions opt;
