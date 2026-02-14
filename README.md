@@ -21,7 +21,7 @@
 ```bash
 ./scripts/deploy_macos_m4.sh
 ```
-脚本会自动执行：平台检查、Homebrew 检查与安装、依赖安装（cmake/ninja/llvm）、构建、测试、冒烟运行。
+脚本会自动执行：平台检查、Homebrew 检查与安装、依赖安装（cmake/ninja/llvm/libomp）、构建、测试、冒烟运行。若 OpenMP 不可用，会自动降级为串行构建，不再报错中断。
 
 ### 2.2 Windows（PowerShell）
 ```powershell
