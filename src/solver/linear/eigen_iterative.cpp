@@ -2,23 +2,44 @@
 
 #include <cmath>
 
+#include "gptsolver/core/logger.hpp"
+
 #ifdef GPTSOLVER_USE_MPI
 #include <mpi.h>
 #endif
 
 namespace gptsolver {
-IterativeResult solve_linear_cg(const SparseMatrix& k, const DenseVector& f, int max_iter) {
-  Eigen::ConjugateGradient<SparseMatrix, Eigen::Lower | Eigen::Upper> cg;
-  cg.setMaxIterations(max_iter);
-  cg.compute(k);
-  IterativeResult r;
-  r.x = cg.solve(f);
-  r.iterations = cg.iterations();
-  r.error = cg.error();
-  return r;
+IterativeResult solve_linear_cg(const SparseMatrix& k, const DenseVector& f, int max_iter, bool verbose) {
+  DenseVector x = DenseVector::Zero(f.size());
+  DenseVector r = f - k * x;
+  DenseVector p = r;
+
+  double rr = r.dot(r);
+  IterativeResult out;
+  for (int it = 0; it < max_iter; ++it) {
+    DenseVector kp = k * p;
+    const double denom = std::max(p.dot(kp), 1e-16);
+    const double alpha = rr / denom;
+    x += alpha * p;
+    r -= alpha * kp;
+
+    const double rr_new = r.dot(r);
+    out.error = std::sqrt(std::max(0.0, rr_new));
+    out.iterations = it + 1;
+    if (verbose) {
+      global_logger().info("[线性迭代] iter=" + std::to_string(it + 1) + ", residual=" + std::to_string(out.error));
+    }
+    if (out.error < 1e-10) break;
+
+    const double beta = rr_new / std::max(rr, 1e-16);
+    p = r + beta * p;
+    rr = rr_new;
+  }
+  out.x = x;
+  return out;
 }
 
-IterativeResult solve_linear_cg_mpi(const SparseMatrix& k, const DenseVector& f, int max_iter) {
+IterativeResult solve_linear_cg_mpi(const SparseMatrix& k, const DenseVector& f, int max_iter, bool verbose) {
 #ifdef GPTSOLVER_USE_MPI
   int init = 0;
   MPI_Initialized(&init);
@@ -49,6 +70,9 @@ IterativeResult solve_linear_cg_mpi(const SparseMatrix& k, const DenseVector& f,
     const double rr_new = dot_mpi(r, r);
     out.error = std::sqrt(std::max(0.0, rr_new));
     out.iterations = it + 1;
+    if (verbose) {
+      global_logger().info("[并行线性迭代] iter=" + std::to_string(it + 1) + ", residual=" + std::to_string(out.error));
+    }
     if (out.error < 1e-10) break;
     const double beta = rr_new / std::max(rr, 1e-16);
     p = r + beta * p;
@@ -57,7 +81,7 @@ IterativeResult solve_linear_cg_mpi(const SparseMatrix& k, const DenseVector& f,
   out.x = x;
   return out;
 #else
-  return solve_linear_cg(k, f, max_iter);
+  return solve_linear_cg(k, f, max_iter, verbose);
 #endif
 }
 }  // namespace gptsolver

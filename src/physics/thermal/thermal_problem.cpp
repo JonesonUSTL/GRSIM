@@ -7,7 +7,7 @@
 #include "gptsolver/assembly/assembler_thermal.hpp"
 #include "gptsolver/io/vtk/pvd_writer.hpp"
 #include "gptsolver/io/vtk/vtu_writer.hpp"
-#include "gptsolver/solver/linear/eigen_direct.hpp"
+#include "gptsolver/solver/linear/eigen_iterative.hpp"
 
 namespace gptsolver {
 namespace {
@@ -22,7 +22,7 @@ void run_thermal_problem(const std::string& out_dir, int frames) {
   std::filesystem::create_directories(out_dir + "/results/step_1");
   auto k = build_thermal_matrix_sparse(16);
   auto q = build_thermal_rhs(16);
-  auto t = solve_linear_sparse(k, q);
+  auto t = solve_linear_cg(k, q, 300, true).x;
   std::vector<double> coords;
   std::vector<double> temp_final;
   for (int i = 0; i < t.size(); ++i) {

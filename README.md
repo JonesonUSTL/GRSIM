@@ -293,3 +293,17 @@ docs/ALL_DOCS.md     # 合并文档
 ```
 
 > 现在 `examples --run` 会直接执行，不再只打印提示。
+
+
+### 计算结果输出文件说明
+| 文件/目录 | 作用 |
+|---|---|
+| `run.log` | 终端同源日志，记录求解启动信息、线性/非线性迭代残差、完成状态。 |
+| `compatibility_report.md` | inp 关键字兼容性检查报告（Parsed-Not-Solved/Unknown 等）。 |
+| `run_manifest.json` | 本次运行元信息（输入文件、后端、线程数、帧数等）。 |
+| `summary.md` | 简版运行摘要与建议。 |
+| `results/results.pvd` | 时序入口文件，供 ParaView 加载整个过程帧。 |
+| `results/step_1/frame_*.vtu` | 每一帧场变量结果（位移/温度等）。 |
+| `checkpoint_0001.bin` | 结构求解检查点，可用于后续恢复。 |
+
+> 默认输出目录为 `output/<案例名>/`，例如 `output/truss_tension/`；每个案例会自动进入自己的独立文件夹，互不覆盖。

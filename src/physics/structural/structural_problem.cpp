@@ -6,6 +6,7 @@
 #include <sstream>
 
 #include "gptsolver/assembly/assembler_contact_placeholder.hpp"
+#include "gptsolver/core/logger.hpp"
 #include "gptsolver/assembly/assembler_structural.hpp"
 #include "gptsolver/assembly/assembler_thermal.hpp"
 #include "gptsolver/assembly/csr_matrix.hpp"
@@ -114,10 +115,12 @@ void run_structural_problem(const std::string& out_dir, int frames) {
     assemble_contact_terms(cps_iter, cp, k_iter, r_contact);
 
     DenseVector res = k_iter * u - (f + r_contact);
+    global_logger().info("[非线性迭代] iter=" + std::to_string(it + 1) + ", residual=" + std::to_string(res.norm()));
     if (res.norm() < 1e-8) break;
 
-    auto du = solve_linear_cg_mpi(k_iter, -res, 300).x;
+    auto du = solve_linear_cg_mpi(k_iter, -res, 300, true).x;
     u += du;
+    global_logger().info("[非线性迭代] iter=" + std::to_string(it + 1) + ", |du|=" + std::to_string(du.norm()));
     if (du.norm() < 1e-9) break;
   }
 
@@ -179,10 +182,11 @@ void run_coupled_thermo_structural_problem(const std::string& out_dir, int frame
 
     auto k = assemble_block_matrix(kuu, kut, ktu, ktt);
     DenseVector r = rhs - k * x;
+    global_logger().info("[耦合迭代] iter=" + std::to_string(iter + 1) + ", residual=" + std::to_string(r.norm()));
     if (r.norm() < 1e-8) break;
 
     auto dx_schur = solve_block_schur(kuu, kut, ktu, ktt, r);
-    auto dx_it = solve_linear_cg(k, r, 400).x;
+    auto dx_it = solve_linear_cg(k, r, 400, true).x;
     DenseVector dx = dx_it;
     if (dx_schur.size() == dx_it.size()) dx = (1.0 - g_schur_blend) * dx_it + g_schur_blend * dx_schur;
     x += dx;

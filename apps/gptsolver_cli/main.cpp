@@ -61,6 +61,13 @@ static std::vector<std::string> list_example_names() {
   return out;
 }
 
+
+static std::string case_name_from_input(const std::string& inp_path) {
+  fs::path p(inp_path);
+  if (p.stem().empty()) return "case";
+  return p.stem().string();
+}
+
 static std::string resolve_example_to_inp(const std::string& name) {
   const auto root = examples_root();
   auto normalize = [](std::string s) {
@@ -179,7 +186,8 @@ int main(int argc, char** argv) {
   }
 
   if (cmd == "run") {
-    std::string out = "output/run";
+    std::string out_root = "output";
+    std::string out;
     int threads = 1;
     std::string backend = "eigen";
     std::string resume;
@@ -187,7 +195,7 @@ int main(int argc, char** argv) {
     double schur_blend = 0.5;
     for (int i = run_arg_start; i < argc; ++i) {
       const std::string a = argv[i];
-      if (a == "--out" && i + 1 < argc) out = std::string(argv[++i]);
+      if (a == "--out" && i + 1 < argc) out_root = std::string(argv[++i]);
       if (a == "--threads" && i + 1 < argc) threads = std::stoi(argv[++i]);
       if (a == "--solver-backend" && i + 1 < argc) backend = argv[++i];
       if (a == "--resume" && i + 1 < argc) resume = argv[++i];
@@ -195,6 +203,9 @@ int main(int argc, char** argv) {
       if (a == "--schur-blend" && i + 1 < argc) schur_blend = std::stod(argv[++i]);
     }
 
+    const std::string case_name = case_name_from_input(inp_path);
+    fs::path out_path = fs::path(out_root) / case_name;
+    out = out_path.string();
     fs::create_directories(out);
     set_linear_solver_backend(backend);
     set_schur_blend_weight(schur_blend);
@@ -226,7 +237,8 @@ int main(int argc, char** argv) {
     }
     set_contact_runtime_controls(contact_ctrl);
     global_logger().open(out + "/run.log");
-    global_logger().info("启动求解, backend=" + backend + ", threads=" + std::to_string(threads));
+    global_logger().info("启动求解, case=" + case_name + ", backend=" + backend + ", threads=" + std::to_string(threads));
+    global_logger().info("输出目录: " + out);
     if (backend == "petsc") global_logger().info("已请求 PETSc 后端；若当前构建未启用，将在求解器层自动回退 Eigen");
     if (!resume.empty()) global_logger().info("从检查点恢复: " + resume);
     inp::write_compatibility_report(out + "/compatibility_report.md", issues);
